@@ -38,6 +38,9 @@ class ViewerApp {
             this.uiComponents = new ViewerUIComponents(this);
             this.uiComponents.initialize();
 
+            // Загрузка предпочтений темы
+            this.uiComponents.loadThemePreference();
+
             // Настройка слушателя изменений в localStorage
             this.setupStorageListener();
 

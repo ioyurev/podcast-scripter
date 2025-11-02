@@ -53,6 +53,9 @@ class ViewerUIComponents {
                 <button id="viewerCopyBtn" class="btn btn-outline-secondary" title="Копировать текст">
                     <i data-feather="copy"></i> Копировать
                 </button>
+                <button id="viewerThemeToggleBtn" class="btn btn-outline-secondary theme-toggle-btn" title="Темная тема">
+                    <span class="theme-icon">🌙</span>
+                </button>
             </div>
         `;
         controlsContainer.appendChild(controlsPanel);
@@ -193,6 +196,17 @@ class ViewerUIComponents {
                 }
             }
         });
+
+        // Кнопка переключения темы
+        const themeToggleBtn = document.getElementById('viewerThemeToggleBtn');
+        if (themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', () => {
+                this.viewerApp.toggleTheme();
+                this.updateThemeButtonIcon(this.viewerApp.getCurrentTheme());
+            });
+        } else {
+            this.logger.error('Элемент viewerThemeToggleBtn не найден в DOM');
+        }
     }
 
     /**
@@ -487,6 +501,42 @@ class ViewerUIComponents {
      */
     updateTheme(theme) {
         document.documentElement.setAttribute('data-theme', theme);
+        this.updateThemeButtonIcon(theme);
+    }
+
+    /**
+     * Обновление иконки кнопки темы
+     * @param {string} theme - текущая тема
+     */
+    updateThemeButtonIcon(theme) {
+        const themeBtn = document.getElementById('viewerThemeToggleBtn');
+        const themeIcon = themeBtn ? themeBtn.querySelector('.theme-icon') : null;
+        if (themeIcon) {
+            if (theme === 'dark') {
+                themeIcon.textContent = '☀️'; // Солнце для темной темы (показываем светлую иконку)
+                themeBtn.title = 'Светлая тема';
+            } else {
+                themeIcon.textContent = '🌙'; // Луна для светлой темы (показываем темную иконку)
+                themeBtn.title = 'Темная тема';
+            }
+        }
+    }
+
+    /**
+     * Загрузка предпочтений темы из localStorage
+     */
+    loadThemePreference() {
+        const savedTheme = localStorage.getItem('viewerTheme');
+        if (savedTheme) {
+            this.viewerApp.setTheme(savedTheme);
+            this.updateThemeButtonIcon(savedTheme);
+        } else {
+            // Если нет сохраненной темы, используем системную предпочтительную тему
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const theme = systemPrefersDark ? 'dark' : 'light';
+            this.viewerApp.setTheme(theme);
+            this.updateThemeButtonIcon(theme);
+        }
     }
 
     /**
