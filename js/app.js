@@ -171,6 +171,53 @@ class PodcastScripterApp {
     }
 
     /**
+     * Открытие режима просмотра
+     * Сохраняет текущие данные в localStorage и открывает viewer.html в новой вкладке
+     * @returns {boolean} Успешно ли открыто
+     */
+    openViewerMode() {
+        try {
+            // Экспортируем текущее состояние
+            const state = this.getState();
+            const data = {
+                roles: state.roles || [],
+                replicas: state.replicas || [],
+                version: '1.0',
+                exportDate: new Date().toISOString()
+            };
+
+            // Сохраняем в localStorage для передачи в режим просмотра
+            const storageKey = 'podcastScriptViewerData';
+            localStorage.setItem(storageKey, JSON.stringify(data));
+
+            // Открываем режим просмотра в новой вкладке
+            const viewerUrl = 'viewer.html';
+            const viewerWindow = window.open(viewerUrl, '_blank');
+
+            if (viewerWindow) {
+                logger.info('Режим просмотра открыт', {
+                    rolesCount: data.roles.length,
+                    replicasCount: data.replicas.length
+                });
+                return true;
+            } else {
+                logger.error('Не удалось открыть режим просмотра - блокировщик всплывающих окон');
+                // Альтернативный вариант - открытие в той же вкладке
+                if (confirm('Пожалуйста, разрешите всплывающие окна для открытия режима просмотра. Открыть в текущей вкладке?')) {
+                    window.location.href = viewerUrl;
+                    return true;
+                }
+                return false;
+            }
+        } catch (error) {
+            logger.error('Ошибка при открытии режима просмотра', {
+                error: error.message
+            });
+            return false;
+        }
+    }
+
+    /**
      * Инициализация Feather Icons
      */
     initFeatherIcons() {

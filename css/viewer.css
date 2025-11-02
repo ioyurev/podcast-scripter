@@ -1,0 +1,477 @@
+/* Стили для режима просмотра скрипта */
+
+/* Контейнер для элементов управления */
+.viewer-controls-container {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: var(--color-white);
+    border-bottom: 2px solid var(--color-gray-border-light);
+    padding: 10px 20px;
+    box-shadow: var(--shadow-md);
+}
+
+.viewer-controls-panel {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.viewer-controls-left,
+.viewer-controls-right {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 768px) {
+    .viewer-controls-panel.mobile {
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch;
+    }
+    
+    .viewer-controls-left,
+    .viewer-controls-right {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+}
+
+/* Контейнер скрипта */
+.viewer-script-container {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+    background: var(--color-white);
+    border-radius: 8px;
+    box-shadow: var(--shadow-md);
+    min-height: calc(100vh - 200px);
+}
+
+/* Статистика в панели управления */
+.viewer-controls-panel .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin: 0 20px;
+    min-width: 400px;
+    flex: 1;
+    max-width: 600px;
+}
+
+/* Для мобильных устройств - 2 колонки */
+@media (max-width: 768px) {
+    .viewer-controls-panel .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        min-width: 200px;
+        gap: 10px;
+    }
+}
+
+.viewer-controls-panel .stat-item {
+    text-align: center;
+    padding: 8px 12px;
+    background: var(--color-gray-lighter);
+    border-radius: 6px;
+    border: 1px solid var(--color-gray-border-light);
+}
+
+.viewer-controls-panel .stat-label {
+    display: block;
+    color: var(--color-text-secondary);
+    font-size: 0.8em;
+    margin-bottom: 2px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.viewer-controls-panel .stat-value {
+    display: block;
+    font-size: 1.1em;
+    font-weight: bold;
+    color: var(--color-text-primary);
+}
+
+/* Старый стиль статистики - скрываем, так как теперь она в панели управления */
+.viewer-statistics {
+    display: none;
+}
+
+/* Печать - статистика в панели управления уже будет скрыта через .viewer-controls-container */
+@media print {
+    .viewer-controls-container {
+        display: none !important;
+    }
+    
+    .viewer-script-container {
+        box-shadow: none;
+        margin: 0;
+        padding: 10px;
+    }
+    
+    .viewer-replica-item {
+        page-break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid var(--color-gray-border);
+    }
+    
+    body {
+        background: var(--color-white);
+    }
+}
+
+/* Список реплик */
+.viewer-replicas-container {
+    margin-top: 20px;
+}
+
+.viewer-replicas-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Отдельная реплика */
+.viewer-replica-item {
+    background: var(--color-white);
+    border: 2px solid var(--color-gray-border);
+    border-left: 5px solid var(--color-gray-border);
+    border-radius: 8px;
+    padding: 15px;
+    transition: all var(--transition-normal);
+    position: relative;
+}
+
+.viewer-replica-item.speaker-colored {
+    border-left-color: var(--viewer-speaker-color, var(--color-primary));
+}
+
+.viewer-replica-item:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+    border-color: var(--color-gray-border-light);
+}
+
+/* Роль в реплике */
+.viewer-replica-role {
+    font-weight: bold;
+    margin-bottom: 10px;
+    padding: 5px 10px;
+    border-radius: 4px;
+    display: inline-block;
+    font-size: 0.9em;
+    background: var(--color-gray-light);
+    color: var(--color-text-primary);
+}
+
+.viewer-replica-item.speaker-colored .viewer-replica-role {
+    background: var(--viewer-speaker-color, var(--color-primary));
+    color: var(--color-white);
+}
+
+/* Текст реплики */
+.viewer-replica-text {
+    margin: 10px 0;
+    line-height: 1.6;
+    color: var(--color-text-primary);
+    font-size: 1.1em;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+/* Информация о реплике */
+.viewer-replica-info {
+    display: flex;
+    gap: 15px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--color-gray-border-light);
+    color: var(--color-text-secondary);
+    font-size: 0.9em;
+}
+
+.replica-index,
+.replica-words,
+.replica-duration {
+    background: var(--color-gray-lighter);
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-weight: 500;
+}
+
+/* Пустое состояние */
+.viewer-empty-state,
+.viewer-error-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    text-align: center;
+    color: var(--color-text-secondary);
+}
+
+.empty-content,
+.error-content {
+    max-width: 400px;
+}
+
+.empty-icon,
+.error-icon {
+    font-size: 3em;
+    margin-bottom: 20px;
+}
+
+.empty-content h3,
+.error-content h3 {
+    margin: 10px 0;
+    color: var(--color-text-primary);
+}
+
+.empty-content p,
+.error-content p {
+    margin: 5px 0;
+    color: var(--color-text-secondary);
+}
+
+/* Модальное окно */
+.viewer-load-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: var(--color-white);
+    border-radius: 8px;
+    padding: 0;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: var(--shadow-lg);
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+.modal-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--color-gray-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: var(--color-text-primary);
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5em;
+    cursor: pointer;
+    color: var(--color-text-secondary);
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-close:hover {
+    color: var(--color-danger);
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.modal-body p {
+    margin: 0 0 15px 0;
+    color: var(--color-text-secondary);
+}
+
+.file-input {
+    width: 100%;
+    padding: 10px;
+    border: 2px dashed var(--color-gray-border);
+    border-radius: 4px;
+    background: var(--color-gray-light);
+}
+
+.modal-footer {
+    padding: 20px;
+    border-top: 1px solid var(--color-gray-border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* Уведомления */
+.viewer-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 20px;
+    border-radius: 8px;
+    color: var(--color-white);
+    z-index: 3000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: slideInRight 0.3s ease-out;
+    max-width: 400px;
+}
+
+.viewer-notification-success {
+    background: var(--color-success);
+    border-left: 4px solid var(--color-success-dark);
+}
+
+.viewer-notification-error {
+    background: var(--color-danger);
+    border-left: 4px solid var(--color-danger-dark);
+}
+
+.viewer-notification-warning {
+    background: var(--color-warning);
+    border-left: 4px solid var(--color-warning-dark);
+}
+
+.notification-content {
+    flex: 1;
+}
+
+.notification-close {
+    background: none;
+    border: none;
+    color: var(--color-white);
+    font-size: 1.2em;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.notification-close:hover {
+    opacity: 0.8;
+}
+
+/* Анимации */
+@keyframes modalSlideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Печать */
+@media print {
+    .viewer-controls-container {
+        display: none !important;
+    }
+    
+    .viewer-script-container {
+        box-shadow: none;
+        margin: 0;
+        padding: 10px;
+    }
+    
+    .viewer-replica-item {
+        page-break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid var(--color-gray-border);
+    }
+    
+    body {
+        background: var(--color-white);
+    }
+}
+
+/* Темная тема */
+[data-theme="dark"] .viewer-controls-container {
+    background: var(--color-gray-lighter);
+    border-color: var(--color-gray-border);
+}
+
+[data-theme="dark"] .viewer-script-container {
+    background: var(--color-gray-lighter);
+}
+
+[data-theme="dark"] .viewer-statistics {
+    background: var(--color-gray-border-light);
+    border-color: var(--color-gray-border);
+}
+
+[data-theme="dark"] .viewer-replica-item {
+    background: var(--color-gray-lighter);
+    border-color: var(--color-gray-border);
+    color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .viewer-replica-role {
+    background: var(--color-gray-border);
+    color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .viewer-replica-text {
+    color: var(--color-text-primary);
+}
+
+/* Высокий контраст */
+@media (prefers-contrast: high) {
+    .viewer-replica-item {
+        border-width: 3px;
+    }
+    
+    .viewer-statistics {
+        border-width: 3px;
+    }
+}
+
+/* Уменьшение анимации */
+@media (prefers-reduced-motion: reduce) {
+    .viewer-replica-item {
+        transition: none;
+    }
+    
+    .viewer-replica-item:hover {
+        transform: none;
+    }
+    
+    @keyframes modalSlideIn {
+        from, to {
+            transform: none;
+            opacity: 1;
+        }
+    }
+}

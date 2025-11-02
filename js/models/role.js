@@ -43,7 +43,7 @@ class Role extends BaseModel {
  * Класс для спикера
  */
 class Speaker extends Role {
-    constructor(name, wordsPerMinute = 150) {
+    constructor(name, wordsPerMinute = 120) {
         super(name, 'speaker');
         this.wordsPerMinute = wordsPerMinute;
         logger.logRoleAction('создание спикера', name, { 

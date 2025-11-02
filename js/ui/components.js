@@ -187,7 +187,77 @@ class UIComponents {
         // Обработчики для элементов управления цветом спикера
         this.setupColorControls();
 
+        // Кнопка открытия режима просмотра
+        this.setupViewerModeButton();
+
         logger.info('Слушатели событий настроены');
+    }
+
+    /**
+     * Настройка кнопки открытия режима просмотра
+     */
+    setupViewerModeButton() {
+        // Находим элемент file-controls в header
+        const fileControls = document.querySelector('.file-controls');
+        if (fileControls) {
+            // Создаем кнопку для режима просмотра
+            const viewerBtn = document.createElement('button');
+            viewerBtn.id = 'viewerModeBtn';
+            viewerBtn.className = 'btn btn-outline-secondary';
+            viewerBtn.title = 'Открыть режим просмотра';
+            viewerBtn.innerHTML = '<i data-feather="eye"></i> Просмотр';
+
+            // Вставляем кнопку перед кнопкой темы
+            const themeToggleBtn = document.getElementById('themeToggleBtn');
+            if (themeToggleBtn) {
+                themeToggleBtn.parentNode.insertBefore(viewerBtn, themeToggleBtn);
+            } else {
+                fileControls.appendChild(viewerBtn);
+            }
+
+            // Добавляем обработчик события
+            viewerBtn.addEventListener('click', () => {
+                this.handleOpenViewerMode();
+            });
+
+            // Инициализируем Feather Icons для новой кнопки
+            if (typeof feather !== 'undefined') {
+                feather.replace({ selector: '#viewerModeBtn i' });
+            }
+
+            logger.info('Кнопка режима просмотра добавлена');
+        } else {
+            logger.error('Элемент file-controls не найден для добавления кнопки режима просмотра');
+        }
+    }
+
+    /**
+     * Обработка открытия режима просмотра
+     */
+    handleOpenViewerMode() {
+        try {
+            // Проверяем, есть ли у нас доступ к основному приложению
+            if (window.app && typeof window.app.openViewerMode === 'function') {
+                const success = window.app.openViewerMode();
+                if (success) {
+                    logger.logUserAction('открытие режима просмотра', {
+                        success: true
+                    });
+                } else {
+                    logger.logUserAction('ошибка открытия режима просмотра', {
+                        success: false
+                    });
+                }
+            } else {
+                logger.error('Основное приложение не найдено для открытия режима просмотра');
+                alert('Не удалось открыть режим просмотра. Пожалуйста, перезагрузите страницу.');
+            }
+        } catch (error) {
+            logger.error('Ошибка при открытии режима просмотра', {
+                error: error.message
+            });
+            alert('Произошла ошибка при открытии режима просмотра.');
+        }
     }
 
     /**
@@ -220,6 +290,7 @@ class UIComponents {
             localStorage.setItem('speakerColorPicker', this.currentSpeakerColor);
         });
     }
+
 
     /**
      * Генерация случайного цвета
@@ -517,7 +588,7 @@ class UIComponents {
         roleName.textContent = role.name;
         const roleType = document.createElement('span');
         roleType.className = 'role-type';
-        roleType.textContent = role.type === 'speaker' ? ' (Спикер)' : ' (Звук)';
+        roleType.textContent = role.type === 'speaker' ? '' : ' (Звук)';
         
         roleInfo.appendChild(roleName);
         roleInfo.appendChild(roleType);
