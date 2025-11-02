@@ -1,8 +1,7 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  base: '/',
-  root: '.',
+  base: './',
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
@@ -21,10 +20,13 @@ export default defineConfig({
     }
   },
   server: {
-    open: true,
     port: 3000,
+    open: true,
     strictPort: true
   },
   publicDir: 'public',
-  assetsInclude: ['**/*.md']
+  assetsInclude: ['**/*.md'],
+  optimizeDeps: {
+    include: ['feather-icons']
+  }
 });
