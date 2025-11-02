@@ -11,8 +11,9 @@ class FileHandler {
 
     /**
      * Сохранение скрипта в файл
+     * @param {string} filename - Имя файла для сохранения (опционально)
      */
-    saveScript() {
+    saveScript(filename = null) {
         try {
             const data = this.dataManager.exportData();
             const jsonData = JSON.stringify(data, null, 2);
@@ -21,13 +22,26 @@ class FileHandler {
             
             const link = document.createElement('a');
             link.href = url;
-            link.download = `podcast-script_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
+            
+            // Генерация имени файла
+            if (!filename) {
+                filename = `podcast-script_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
+            } else {
+                // Валидация и обработка имени файла
+                if (!filename.toLowerCase().endsWith('.json')) {
+                    filename += '.json';
+                }
+                // Удаление недопустимых символов для имен файлов
+                filename = filename.replace(/[<>:"/\\|?*]/g, '_');
+            }
+            
+            link.download = filename;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
 
-            logger.logFileOperation('сохранение скрипта', link.download, {
+            logger.logFileOperation('скачивание скрипта', link.download, {
                 fileSize: jsonData.length,
                 roleCount: data.roles.length,
                 replicaCount: data.replicas.length
@@ -35,7 +49,7 @@ class FileHandler {
 
             return true;
         } catch (error) {
-            logger.error('Ошибка при сохранении скрипта', {
+            logger.error('Ошибка при скачивании скрипта', {
                 error: error.message
             });
             return false;

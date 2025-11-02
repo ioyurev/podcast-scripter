@@ -134,9 +134,9 @@ class UIComponents {
             this.handleAddReplica();
         });
 
-        // Сохранение скрипта
+        // Скачивание скрипта
         document.getElementById('saveScriptBtn').addEventListener('click', () => {
-            this.handleSaveScript();
+            this.handleDownloadScript();
         });
 
         // Загрузка скрипта
@@ -503,19 +503,207 @@ class UIComponents {
     }
 
     /**
-     * Обработка сохранения скрипта
+     * Обработка скачивания скрипта
      */
-    handleSaveScript() {
-        const success = this.fileHandler.saveScript();
-        if (success) {
-            logger.logUserAction('сохранение скрипта', {
-                success: true
-            });
-        } else {
-            logger.logUserAction('ошибка сохранения скрипта', {
-                success: false
-            });
+    handleDownloadScript() {
+        // Создаем модальное окно для ввода имени файла
+        this.showFilenameDialog((filename) => {
+            if (filename !== null) {
+                const success = this.fileHandler.saveScript(filename);
+                if (success) {
+                    logger.logUserAction('скачивание скрипта', {
+                        success: true,
+                        filename: filename
+                    });
+                } else {
+                    logger.logUserAction('ошибка скачивания скрипта', {
+                        success: false,
+                        filename: filename
+                    });
+                }
+            }
+        });
+    }
+
+    /**
+     * Показ модального окна для ввода имени файла
+     * @param {Function} onConfirm - Функция для выполнения при подтверждении
+     */
+    showFilenameDialog(onConfirm) {
+        // Создаем overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            animation: fadeIn 0.2s ease-in-out;
+        `;
+
+        // Создаем модальное окно
+        const modal = document.createElement('div');
+        modal.className = 'filename-dialog-modal';
+        modal.style.cssText = `
+            background: var(--color-white);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: var(--shadow-lg);
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: slideIn 0.2s ease-in-out;
+        `;
+
+        // Заголовок
+        const modalTitle = document.createElement('h3');
+        modalTitle.style.cssText = `
+            margin: 0 15px 0;
+            color: var(--color-text-primary);
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        `;
+        modalTitle.innerHTML = '📥 Скачать скрипт';
+
+        // Описание
+        const modalDescription = document.createElement('p');
+        modalDescription.style.cssText = `
+            margin: 10px 15px 15px;
+            color: var(--color-text-secondary);
+            font-size: 14px;
+            line-height: 1.4;
+        `;
+        modalDescription.textContent = 'Введите имя файла для скачивания (без расширения .json):';
+
+        // Поле ввода
+        const inputContainer = document.createElement('div');
+        inputContainer.style.cssText = `
+            margin: 0 15px 15px;
+        `;
+
+        const filenameInput = document.createElement('input');
+        filenameInput.type = 'text';
+        filenameInput.className = 'form-control';
+        filenameInput.style.cssText = `
+            width: 100%;
+            padding: 10px;
+            border: 2px solid var(--color-gray-border);
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: Arial, sans-serif;
+            box-sizing: border-box;
+        `;
+        // Устанавливаем предустановленное имя файла
+        const defaultName = `podcast-script-${new Date().toISOString().slice(0, 10)}`;
+        filenameInput.value = defaultName;
+        filenameInput.focus();
+        filenameInput.select();
+
+        inputContainer.appendChild(filenameInput);
+
+        // Кнопки
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.cssText = `
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin: 0 15px;
+        `;
+
+        const downloadBtn = document.createElement('button');
+        downloadBtn.innerHTML = '<i data-feather="download"></i> Скачать';
+        downloadBtn.className = 'btn btn-primary';
+        downloadBtn.style.cssText = `
+            cursor: pointer;
+            font-weight: 600;
+            transition: all var(--transition-fast);
+        `;
+        downloadBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const filename = filenameInput.value.trim();
+            if (filename) {
+                onConfirm(filename);
+                document.body.removeChild(overlay);
+            } else {
+                alert('Пожалуйста, введите имя файла');
+            }
+        });
+
+        const cancelBtn = document.createElement('button');
+        cancelBtn.innerHTML = '<i data-feather="x-circle"></i> Отмена';
+        cancelBtn.className = 'btn btn-secondary';
+        cancelBtn.style.cssText = `
+            cursor: pointer;
+            font-weight: 600;
+            transition: all var(--transition-fast);
+        `;
+        cancelBtn.addEventListener('click', () => {
+            onConfirm(null);
+            document.body.removeChild(overlay);
+        });
+
+        buttonContainer.appendChild(cancelBtn);
+        buttonContainer.appendChild(downloadBtn);
+
+        modal.appendChild(modalTitle);
+        modal.appendChild(modalDescription);
+        modal.appendChild(inputContainer);
+        modal.appendChild(buttonContainer);
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+
+        // Инициализация Feather Icons для новых элементов
+        if (typeof feather !== 'undefined') {
+            feather.replace();
         }
+
+        // Обработка Enter для сохранения
+        filenameInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const filename = filenameInput.value.trim();
+                if (filename) {
+                    onConfirm(filename);
+                    document.body.removeChild(overlay);
+                } else {
+                    alert('Пожалуйста, введите имя файла');
+                }
+            } else if (e.key === 'Escape') {
+                onConfirm(null);
+                document.body.removeChild(overlay);
+            }
+        });
+
+        // Закрытие по Esc
+        const handleEsc = (e) => {
+            if (e.key === 'Escape') {
+                onConfirm(null);
+                document.body.removeChild(overlay);
+            }
+        };
+        document.addEventListener('keydown', handleEsc);
+
+        // Удаление обработчика при закрытии
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                onConfirm(null);
+                document.body.removeChild(overlay);
+            }
+        });
+
+        // Фокус на поле ввода
+        setTimeout(() => {
+            filenameInput.focus();
+        }, 100);
     }
 
     /**

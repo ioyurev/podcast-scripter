@@ -364,7 +364,7 @@ class ViewerUIComponents {
             } else {
                 this.showNotification('Не удалось скопировать скрипт', 'error');
             }
-        } catch (error) {
+        } catch {
             this.showNotification('Не удалось скопировать скрипт', 'error');
         }
 
@@ -373,9 +373,8 @@ class ViewerUIComponents {
 
     /**
      * Обновление состояния элементов управления
-     * @param {Object} state - Состояние приложения
      */
-    updateControls(state = {}) {
+    updateControls() {
         // Обновляем состояние кнопок в зависимости от наличия данных
         const hasData = this.viewerApp.currentData !== null;
         const canPrint = hasData;

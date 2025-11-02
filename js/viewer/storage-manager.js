@@ -5,6 +5,7 @@ class StorageManager {
     constructor() {
         this.storageKey = 'podcastScriptViewerData';
         this.listeners = [];
+        this.logger = console; // Use console as default logger
         this.setupStorageListener();
     }
 
@@ -20,7 +21,7 @@ class StorageManager {
             this.notifyListeners(data);
             return true;
         } catch (error) {
-            console.error('Ошибка при сохранении в localStorage:', error);
+            this.logger.error('Ошибка при сохранении в localStorage:', { error: error.message });
             return false;
         }
     }
@@ -38,7 +39,7 @@ class StorageManager {
             }
             return null;
         } catch (error) {
-            console.error('Ошибка при загрузке из localStorage:', error);
+            this.logger.error('Ошибка при загрузке из localStorage:', { error: error.message });
             return null;
         }
     }
@@ -51,7 +52,7 @@ class StorageManager {
             localStorage.removeItem(this.storageKey);
             this.notifyListeners(null);
         } catch (error) {
-            console.error('Ошибка при очистке localStorage:', error);
+            this.logger.error('Ошибка при очистке localStorage:', { error: error.message });
         }
     }
 
@@ -79,7 +80,7 @@ class StorageManager {
             try {
                 callback(data);
             } catch (error) {
-                console.error('Ошибка в callback подписчика:', error);
+                this.logger.error('Ошибка в callback подписчика:', { error: error.message });
             }
         });
     }
@@ -94,7 +95,7 @@ class StorageManager {
                     const data = JSON.parse(event.newValue);
                     this.notifyListeners(data);
                 } catch (error) {
-                    console.error('Ошибка при парсинге данных из storage event:', error);
+                    this.logger.error('Ошибка при парсинге данных из storage event:', { error: error.message });
                     this.notifyListeners(null);
                 }
             }
@@ -111,7 +112,7 @@ class StorageManager {
             localStorage.setItem(test, test);
             localStorage.removeItem(test);
             return true;
-        } catch (e) {
+        } catch {
             return false;
         }
     }
@@ -124,7 +125,7 @@ class StorageManager {
         try {
             const data = localStorage.getItem(this.storageKey);
             return data ? new Blob([data]).size : 0;
-        } catch (error) {
+        } catch {
             return 0;
         }
     }
