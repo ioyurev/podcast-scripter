@@ -2,9 +2,9 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   base: '/',
-  root: 'src',
+  root: '.',
   build: {
-    outDir: '../dist',
+    outDir: 'dist',
     assetsDir: 'assets',
     minify: 'esbuild',
     sourcemap: true,
@@ -25,6 +25,6 @@ export default defineConfig({
     port: 3000,
     strictPort: true
   },
-  publicDir: '../public',
+  publicDir: 'public',
   assetsInclude: ['**/*.md']
 });
