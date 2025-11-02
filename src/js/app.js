@@ -1,10 +1,10 @@
 import feather from 'feather-icons';
 
 // Импорты всех необходимых классов
+import { DataService } from './core/data-service.js';
 import { logger } from './logger.js';
 import { Speaker, SoundEffect} from './models/role.js';
 import { DataManager } from './services/data-manager.js';
-import { FileHandler } from './services/file-handler.js';
 import { UIComponents } from './ui/components.js';
 
 /**
@@ -30,12 +30,12 @@ class PodcastScripterApp {
             this.dataManager = new DataManager();
             logger.info('Менеджер данных создан');
 
-            // Создание обработчика файлов
-            this.fileHandler = new FileHandler(this.dataManager);
-            logger.info('Обработчик файлов создан');
+            // Создание сервиса данных
+            this.dataService = new DataService();
+            logger.info('Сервис данных создан');
 
             // Создание компонентов UI
-            this.uiComponents = new UIComponents(this.dataManager, this.fileHandler);
+            this.uiComponents = new UIComponents(this.dataManager, this.dataService);
             logger.info('Компоненты UI созданы');
 
             // Инициализация компонентов
@@ -62,7 +62,7 @@ class PodcastScripterApp {
             const savedData = localStorage.getItem('podcastScriptData');
             if (savedData) {
                 const data = JSON.parse(savedData);
-                if (this.fileHandler.validateScriptData(data)) {
+                if (this.dataService.validateScriptData(data)) {
                     this.dataManager.importData(data);
                     this.uiComponents.updateRolesList();
                     this.uiComponents.updateReplicasList();

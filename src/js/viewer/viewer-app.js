@@ -1,7 +1,7 @@
+import { DataService } from '../core/data-service.js';
 import { logger } from '../logger.js';
 import { ScriptData } from '../models/script-data.js';
 
-import { DataLoader } from './data-loader.js';
 import { ScriptViewer } from './script-viewer.js';
 import { StorageManager } from './storage-manager.js';
 import { ViewerUIComponents } from './ui-components.js';
@@ -12,7 +12,7 @@ import { ViewerUIComponents } from './ui-components.js';
 class ViewerApp {
     constructor() {
         this.storageManager = new StorageManager();
-        this.dataLoader = new DataLoader(this.storageManager);
+        this.dataService = new DataService();
         this.scriptViewer = null;
         this.uiComponents = null;
         this.currentData = null;
@@ -94,7 +94,7 @@ class ViewerApp {
      */
     async loadInitialData() {
         // Сначала пробуем загрузить из localStorage
-        const scriptData = await this.dataLoader.loadFromStorage();
+        const scriptData = await this.dataService.loadFromStorage('podcastScriptViewerData');
         if (scriptData) {
             await this.loadScript(scriptData);
         } else {
@@ -149,7 +149,7 @@ class ViewerApp {
             }
 
             // Сохраняем в localStorage для синхронизации
-            this.dataLoader.saveToStorage(scriptData);
+            this.dataService.saveToStorage(scriptData, 'podcastScriptViewerData');
 
             this.logger.info('Скрипт успешно загружен и отображен', {
                 roleCount: scriptData.roles.length,
@@ -172,7 +172,7 @@ class ViewerApp {
      */
     async loadScriptFromJSON(file) {
         try {
-            const scriptData = await this.dataLoader.loadFromJSONFile(file);
+            const scriptData = await this.dataService.loadFromJSONFile(file);
             if (scriptData) {
                 return await this.loadScript(scriptData);
             }
@@ -265,7 +265,7 @@ class ViewerApp {
      */
     saveCurrentData() {
         if (this.currentData) {
-            return this.dataLoader.saveToStorage(this.currentData);
+            return this.dataService.saveToStorage(this.currentData, 'podcastScriptViewerData');
         }
         return false;
     }

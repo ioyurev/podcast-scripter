@@ -38,8 +38,8 @@ class ViewerUIComponents {
                 <button id="viewerBackBtn" class="btn btn-secondary" title="Вернуться к редактированию">
                     <i data-feather="arrow-left"></i> Редактировать
                 </button>
-                <button id="viewerLoadJsonBtn" class="btn btn-primary" title="Загрузить JSON файл">
-                    <i data-feather="upload"></i> Загрузить JSON
+                <button id="viewerLoadJsonBtn" class="btn btn-primary" title="Открыть файл">
+                    <i data-feather="upload"></i> Открыть файл
                 </button>
                 <input type="file" id="viewerJsonFileInput" accept=".json" style="display: none;">
             </div>
@@ -68,41 +68,6 @@ class ViewerUIComponents {
         this.elements.jsonFileInput = document.getElementById('viewerJsonFileInput');
         this.elements.printBtn = document.getElementById('viewerPrintBtn');
         this.elements.copyBtn = document.getElementById('viewerCopyBtn');
-
-        // Создание модального окна для загрузки JSON
-        this.createLoadJsonModal();
-    }
-
-    /**
-     * Создание модального окна для загрузки JSON
-     */
-    createLoadJsonModal() {
-        const modal = document.createElement('div');
-        modal.className = 'modal-overlay viewer-load-modal';
-        modal.style.display = 'none';
-        modal.innerHTML = `
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>Загрузить JSON файл</h3>
-                    <button class="modal-close" id="viewerLoadModalClose">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <p>Выберите JSON файл с сохраненным скриптом подкаста</p>
-                    <input type="file" id="viewerModalJsonFile" accept=".json" class="file-input">
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" id="viewerModalCancelBtn">Отмена</button>
-                    <button class="btn btn-primary" id="viewerModalLoadBtn" disabled>Загрузить</button>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(modal);
-
-        this.elements.loadModal = modal;
-        this.elements.modalFileInput = document.getElementById('viewerModalJsonFile');
-        this.elements.modalCloseBtn = document.getElementById('viewerLoadModalClose');
-        this.elements.modalCancelBtn = document.getElementById('viewerModalCancelBtn');
-        this.elements.modalLoadBtn = document.getElementById('viewerModalLoadBtn');
     }
 
     /**
@@ -116,10 +81,10 @@ class ViewerUIComponents {
             });
         }
 
-        // Кнопка загрузки JSON
+        // Кнопка загрузки JSON - теперь напрямую открывает файл
         if (this.elements.loadJsonBtn) {
             this.elements.loadJsonBtn.addEventListener('click', () => {
-                this.showLoadJsonModal();
+                document.getElementById('viewerJsonFileInput').click();
             });
         }
 
@@ -134,40 +99,6 @@ class ViewerUIComponents {
         if (this.elements.copyBtn) {
             this.elements.copyBtn.addEventListener('click', () => {
                 this.handleCopyScript();
-            });
-        }
-
-        // Обработчики для модального окна
-        if (this.elements.modalFileInput) {
-            this.elements.modalFileInput.addEventListener('change', (e) => {
-                this.handleModalFileSelect(e);
-            });
-        }
-
-        if (this.elements.modalCloseBtn) {
-            this.elements.modalCloseBtn.addEventListener('click', () => {
-                this.hideLoadJsonModal();
-            });
-        }
-
-        if (this.elements.modalCancelBtn) {
-            this.elements.modalCancelBtn.addEventListener('click', () => {
-                this.hideLoadJsonModal();
-            });
-        }
-
-        if (this.elements.modalLoadBtn) {
-            this.elements.modalLoadBtn.addEventListener('click', () => {
-                this.handleModalLoad();
-            });
-        }
-
-        // Закрытие модального окна по клику вне его
-        if (this.elements.loadModal) {
-            this.elements.loadModal.addEventListener('click', (e) => {
-                if (e.target === this.elements.loadModal) {
-                    this.hideLoadJsonModal();
-                }
             });
         }
 
@@ -190,10 +121,6 @@ class ViewerUIComponents {
             } else if (e.ctrlKey && e.key === 's') {
                 e.preventDefault();
                 this.handleCopyScript();
-            } else if (e.key === 'Escape') {
-                if (this.elements.loadModal && this.elements.loadModal.style.display !== 'none') {
-                    this.hideLoadJsonModal();
-                }
             }
         });
 
@@ -227,7 +154,7 @@ class ViewerUIComponents {
      */
     async handleJsonFileLoad(file) {
         try {
-            const scriptData = await this.viewerApp.dataLoader.loadFromJSONFile(file);
+            const scriptData = await this.viewerApp.dataService.loadFromJSONFile(file);
             if (scriptData) {
                 this.viewerApp.loadScript(scriptData);
                 this.logger.info('JSON файл успешно загружен', {
@@ -244,65 +171,6 @@ class ViewerUIComponents {
         }
     }
 
-    /**
-     * Показ модального окна загрузки JSON
-     */
-    showLoadJsonModal() {
-        if (this.elements.loadModal) {
-            this.elements.loadModal.style.display = 'flex';
-            this.elements.modalFileInput.focus();
-        }
-    }
-
-    /**
-     * Скрытие модального окна загрузки JSON
-     */
-    hideLoadJsonModal() {
-        if (this.elements.loadModal) {
-            this.elements.loadModal.style.display = 'none';
-            this.elements.modalFileInput.value = ''; // Сброс файла
-            this.elements.modalLoadBtn.disabled = true;
-        }
-    }
-
-    /**
-     * Обработка выбора файла в модальном окне
-     * @param {Event} e - Событие изменения файла
-     */
-    handleModalFileSelect(e) {
-        const file = e.target.files[0];
-        if (file) {
-            this.elements.modalLoadBtn.disabled = false;
-        } else {
-            this.elements.modalLoadBtn.disabled = true;
-        }
-    }
-
-    /**
-     * Обработка загрузки в модальном окне
-     */
-    async handleModalLoad() {
-        const file = this.elements.modalFileInput.files[0];
-        if (file) {
-            try {
-                const scriptData = await this.viewerApp.dataLoader.loadFromJSONFile(file);
-                if (scriptData) {
-                    this.viewerApp.loadScript(scriptData);
-                    this.hideLoadJsonModal();
-                    this.logger.info('JSON файл загружен через модальное окно', {
-                        fileName: file.name
-                    });
-                } else {
-                    this.showNotification('Невалидный файл скрипта', 'error');
-                }
-            } catch (error) {
-                this.logger.error('Ошибка при загрузке файла в модальном окне', {
-                    error: error.message
-                });
-                this.showNotification('Ошибка при загрузке файла', 'error');
-            }
-        }
-    }
 
     /**
      * Обработка печати
@@ -486,10 +354,6 @@ class ViewerUIComponents {
         // Удаляем созданные элементы
         if (this.elements.controlsContainer) {
             this.elements.controlsContainer.remove();
-        }
-
-        if (this.elements.loadModal) {
-            this.elements.loadModal.remove();
         }
 
         this.logger.info('UI компоненты режима просмотра очищены');

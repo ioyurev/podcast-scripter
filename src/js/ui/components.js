@@ -11,9 +11,9 @@ import { SpeakerReplicaElement } from './speaker-replica-element.js';
  * Компоненты пользовательского интерфейса
  */
 class UIComponents {
-    constructor(dataManager, fileHandler) {
+    constructor(dataManager, dataService) {
         this.dataManager = dataManager;
-        this.fileHandler = fileHandler;
+        this.dataService = dataService;
         this.draggedElement = null;
         this.draggedReplicaId = null;
         this.currentSpeakerColor = '#007bff'; // Начальный цвет по умолчанию
@@ -509,7 +509,9 @@ class UIComponents {
         // Создаем модальное окно для ввода имени файла
         this.showFilenameDialog((filename) => {
             if (filename !== null) {
-                const success = this.fileHandler.saveScript(filename);
+                // Get the current script data from dataManager
+                const scriptData = this.dataManager.exportData();
+                const success = this.dataService.saveToJSONFile(scriptData, filename);
                 if (success) {
                     logger.logUserAction('скачивание скрипта', {
                         success: true,
@@ -572,7 +574,7 @@ class UIComponents {
             align-items: center;
             gap: 10px;
         `;
-        modalTitle.innerHTML = '📥 Скачать скрипт';
+        modalTitle.innerHTML = '📥 Скачать файл';
 
         // Описание
         const modalDescription = document.createElement('p');
@@ -711,14 +713,24 @@ class UIComponents {
      * @param {File} file - Файл для загрузки
      */
     async handleLoadScript(file) {
-        const success = await this.fileHandler.loadScript(file);
-        if (success) {
-            this.updateRolesList();
-            this.updateReplicasList();
-            logger.logUserAction('загрузка скрипта', {
-                fileName: file.name,
-                success: true
-            });
+        const scriptData = await this.dataService.loadFromJSONFile(file);
+        if (scriptData) {
+            // Import the loaded data into the data manager
+            const success = this.dataManager.importData(scriptData);
+            if (success) {
+                this.updateRolesList();
+                this.updateReplicasList();
+                logger.logUserAction('загрузка скрипта', {
+                    fileName: file.name,
+                    success: true
+                });
+            } else {
+                alert('Ошибка при загрузке скрипта');
+                logger.logUserAction('ошибка загрузки скрипта', {
+                    fileName: file.name,
+                    success: false
+                });
+            }
         } else {
             alert('Ошибка при загрузке скрипта');
             logger.logUserAction('ошибка загрузки скрипта', {
