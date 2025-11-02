@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Создание скрипта подкаста</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Подключение Feather Icons -->
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+</head>
+<body>
+    <header class="global-header">
+        <h1>Создание скрипта подкаста</h1>
+        <div class="header-content">
+            <div class="stats-container header-stats">
+                <div class="stat-item">
+                    <span>Всего слов:</span>
+                    <span id="totalWords">0</span>
+                </div>
+                <div class="stat-item">
+                    <span>Общая длительность:</span>
+                    <span id="totalDuration">0:00</span>
+                </div>
+            </div>
+            <div class="header-controls">
+                <div class="file-controls">
+                    <button id="saveScriptBtn" class="btn btn-primary">
+                        <i data-feather="save"></i> Сохранить скрипт
+                    </button>
+                    <input type="file" id="loadScriptInput" accept=".json" style="display: none;">
+                    <button id="loadScriptBtn" class="btn btn-primary">
+                        <i data-feather="upload"></i> Загрузить скрипт
+                    </button>
+                </div>
+                <button id="themeToggleBtn" class="theme-toggle-btn" title="Переключить тему">
+                    <span class="theme-icon">🌙</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="app-container">
+        <!-- Левый сайдбар для управления ролями -->
+        <aside class="sidebar left-sidebar" id="roleSidebar">
+            <div class="sidebar-header">
+                <h2>Управление ролями</h2>
+            </div>
+            <div class="sidebar-content">
+                <div class="role-controls">
+                    <input type="text" id="roleName" placeholder="Имя роли">
+                    <select id="roleType">
+                        <option value="speaker">Спикер</option>
+                        <option value="sound">Звуковой эффект</option>
+                    </select>
+                    <button id="addRoleBtn" class="btn btn-primary">
+                        <i data-feather="plus"></i> Добавить роль
+                    </button>
+                </div>
+                <div class="speaker-color-controls">
+                    <label for="speakerColorPicker">Цвет:</label>
+                    <div class="color-controls">
+                        <input type="color" id="speakerColorPicker" class="color-picker" value="#007bff" title="Выберите цвет спикера" aria-label="Выберите цвет спикера">
+                        <button id="randomColorBtn" class="btn btn-color-picker" title="Случайный цвет">
+                            <i data-feather="shuffle"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="rolesList" class="roles-list"></div>
+            </div>
+        </aside>
+
+        <!-- Основное содержимое -->
+        <main class="main-content">
+            <!-- Панель реплик -->
+            <section class="replica-panel">
+                <h2>Реплики</h2>
+                <div id="replicasList" class="replicas-list"></div>
+                <div class="replica-controls">
+                    <select id="replicaRole" disabled>
+                        <option value="">Выберите роль</option>
+                    </select>
+                    <textarea id="replicaText" placeholder="Текст реплики" disabled></textarea>
+                    <button id="addReplicaBtn" disabled class="btn btn-primary btn-icon-only" title="Добавить реплику">
+                        <i data-feather="message-square"></i>
+                    </button>
+                </div>
+            </section>
+        </main>
+
+    </div>
+
+    <script src="js/logger.js"></script>
+    <script src="js/models/base.js"></script>
+    <script src="js/models/role.js"></script>
+    <script src="js/models/replica.js"></script>
+    <script src="js/services/data-manager.js"></script>
+    <script src="js/services/file-handler.js"></script>
+    <script src="js/ui/base-element.js"></script>
+    <script src="js/ui/speaker-replica-element.js"></script>
+    <script src="js/ui/sound-effect-element.js"></script>
+    <script src="js/ui/components.js"></script>
+    <script src="js/app.js"></script>
+    
+    <!-- Инициализация Feather Icons -->
+    <script>
+        feather.replace();
+    </script>
+</body>
+</html>

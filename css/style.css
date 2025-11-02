@@ -1,0 +1,2081 @@
+/* Сброс стилей */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Улучшения доступности */
+*:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+*:focus:not(:focus-visible) {
+    outline: none;
+    outline-offset: 0;
+}
+
+*:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+/* Пропуск навигации для доступности */
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 6px;
+    background: var(--color-primary);
+    color: var(--color-white);
+    padding: 8px;
+    text-decoration: none;
+    border-radius: var(--border-radius-md);
+    z-index: 10000;
+}
+
+.skip-link:focus {
+    top: 6px;
+}
+
+/* Скрытие вспомогательных элементов */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Показываем вспомогательные элементы при фокусе */
+.sr-only.focusable:focus,
+.sr-only.focusable:active {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+}
+
+/* Улучшенные фокус-стили для интерактивных элементов */
+button:focus,
+input:focus,
+select:focus,
+textarea:focus,
+a:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+/* Режим уменьшения анимации */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Режим высокого контраста */
+@media (prefers-contrast: high) {
+    :root {
+        --color-primary: #0000ee;
+        --color-primary-dark: #0000cd;
+        --color-success: #006400;
+        --color-success-dark: #004d00;
+        --color-danger: #8b0000;
+        --color-danger-dark: #6b0000;
+        --color-warning: #808000;
+        --color-warning-dark: #606000;
+        --color-gray: #2f4f4f;
+        --color-gray-dark: #000000;
+        --color-gray-light: #f5f5f5;
+        --color-gray-lighter: #ffffff;
+        --color-gray-border: #000000;
+        --color-gray-border-light: #000000;
+        --color-white: #ffffff;
+        --color-black: #000000;
+        --color-text-primary: #000000;
+        --color-text-secondary: #000000;
+        --color-text-light: #000000;
+        --color-text-dark: #000000;
+    }
+}
+
+/* CSS переменные */
+:root {
+    /* Цвета */
+    --color-primary: #007bff;
+    --color-primary-dark: #0056b3;
+    --color-primary-light: #e7f3ff;
+    --color-success: #28a745;
+    --color-success-dark: #218838;
+    --color-success-light: #e8f5e9;
+    --color-danger: #dc3545;
+    --color-danger-dark: #c82333;
+    --color-danger-light: #f8d7da;
+    --color-warning: #fd7e14; /* Более темный оранжевый вместо ярко-желтого */
+    --color-warning-dark: #e06d06;
+    --color-warning-light: #fff3e0;
+    --color-info: #17a2b8;
+    --color-info-dark: #117a8b;
+    --color-info-light: #d1ecf1;
+    --color-gray: #6c757d;
+    --color-gray-dark: #5a6268;
+    --color-gray-light: #f8f9fa;
+    --color-gray-lighter: #f5f5f5;
+    --color-gray-border: #ddd;
+    --color-gray-border-light: #eee;
+    --color-white: #ffffff;
+    --color-black: #000000;
+    --color-text-primary: #333333;
+    --color-text-secondary: #666666;
+    --color-text-light: #999999;
+    --color-text-dark: #212529;
+    
+    /* Размеры шрифтов */
+    --font-size-xs: 11px;
+    --font-size-sm: 12px;
+    --font-size-base: 14px;
+    --font-size-md: 16px;
+    --font-size-lg: 18px;
+    --font-size-xl: 20px;
+    --font-size-xxl: 24px;
+    
+    /* Отступы */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 12px;
+    --spacing-lg: 16px;
+    --spacing-xl: 20px;
+    --spacing-xxl: 24px;
+    
+    /* Размеры кнопок */
+    --btn-padding-xs: 4px 8px;
+    --btn-padding-sm: 6px 12px;
+    --btn-padding-md: 8px 16px;
+    --btn-padding-lg: 12px 24px;
+    --btn-font-size-xs: 12px;
+    --btn-font-size-sm: 13px;
+    --btn-font-size-md: 14px;
+    --btn-font-size-lg: 16px;
+    
+    /* Радиусы */
+    --border-radius-sm: 3px;
+    --border-radius-md: 4px;
+    --border-radius-lg: 8px;
+    
+    /* Тени */
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+    --shadow-md: 0 2px 10px rgba(0,0,0,0.1);
+    --shadow-lg: 0 4px 20px rgba(0,0,0,0.15);
+    
+    /* Переходы */
+    --transition-fast: 0.1s;
+    --transition-normal: 0.2s;
+    --transition-slow: 0.3s;
+    
+    /* Темная тема - по умолчанию пустые значения */
+    --dark-color-primary: #0d6efd;
+    --dark-color-primary-dark: #0b5ed7;
+    --dark-color-success: #198754;
+    --dark-color-success-dark: #157347;
+    --dark-color-danger: #dc3545;
+    --dark-color-danger-dark: #c82333;
+    --dark-color-warning: #ffc107;
+    --dark-color-warning-dark: #e0a800;
+    --dark-color-info: #0dcaf0;
+    --dark-color-info-dark: #31d2f2;
+    --dark-color-gray: #6c757d;
+    --dark-color-gray-dark: #5c636a;
+    --dark-color-gray-light: #343a40;
+    --dark-color-gray-lighter: #1a1d20; /* Более темный фон страницы */
+    --dark-color-gray-border: #495057;
+    --dark-color-gray-border-light: #343a40;
+    --dark-color-white: #2b3035; /* Более светлый фон для элементов */
+    --dark-color-black: #ffffff;
+    --dark-color-text-primary: #e9ecef;
+    --dark-color-text-secondary: #ced4da;
+    --dark-color-text-light: #adb5bd;
+    --dark-color-text-dark: #f8f9fa;
+}
+
+/* Темная тема */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --color-primary: var(--dark-color-primary);
+        --color-primary-dark: var(--dark-color-primary-dark);
+        --color-success: var(--dark-color-success);
+        --color-success-dark: var(--dark-color-success-dark);
+        --color-danger: var(--dark-color-danger);
+        --color-danger-dark: var(--dark-color-danger-dark);
+        --color-warning: var(--dark-color-warning);
+        --color-warning-dark: var(--dark-color-warning-dark);
+        --color-info: var(--dark-color-info);
+        --color-info-dark: var(--dark-color-info-dark);
+        --color-gray: var(--dark-color-gray);
+        --color-gray-dark: var(--dark-color-gray-dark);
+        --color-gray-light: var(--dark-color-gray-light);
+        --color-gray-lighter: var(--dark-color-gray-lighter);
+        --color-gray-border: var(--dark-color-gray-border);
+        --color-gray-border-light: var(--dark-color-gray-border-light);
+        --color-white: var(--dark-color-white);
+        --color-black: var(--dark-color-black);
+        --color-text-primary: var(--dark-color-text-primary);
+        --color-text-secondary: var(--dark-color-text-secondary);
+        --color-text-light: var(--dark-color-text-light);
+        --color-text-dark: var(--dark-color-text-dark);
+    }
+}
+
+/* Поддержка ручной темной темы */
+[data-theme="dark"] {
+    --color-primary: var(--dark-color-primary);
+    --color-primary-dark: var(--dark-color-primary-dark);
+    --color-success: var(--dark-color-success);
+    --color-success-dark: var(--dark-color-success-dark);
+    --color-danger: var(--dark-color-danger);
+    --color-danger-dark: var(--dark-color-danger-dark);
+    --color-warning: var(--dark-color-warning);
+    --color-warning-dark: var(--dark-color-warning-dark);
+    --color-info: var(--dark-color-info);
+    --color-info-dark: var(--dark-color-info-dark);
+    --color-gray: var(--dark-color-gray);
+    --color-gray-dark: var(--dark-color-gray-dark);
+    --color-gray-light: var(--dark-color-gray-light);
+    --color-gray-lighter: var(--dark-color-gray-lighter);
+    --color-gray-border: var(--dark-color-gray-border);
+    --color-gray-border-light: var(--dark-color-gray-border-light);
+    --color-white: var(--dark-color-white);
+    --color-black: var(--dark-color-black);
+    --color-text-primary: var(--dark-color-text-primary);
+    --color-text-secondary: var(--dark-color-text-secondary);
+    --color-text-light: var(--dark-color-text-light);
+    --color-text-dark: var(--dark-color-text-dark);
+}
+
+/* Светлая тема по умолчанию */
+:root:not([data-theme="dark"]) {
+    --color-primary: #007bff;
+    --color-primary-dark: #0056b3;
+    --color-primary-light: #e7f3ff;
+    --color-success: #28a745;
+    --color-success-dark: #218838;
+    --color-success-light: #e8f5e9;
+    --color-danger: #dc3545;
+    --color-danger-dark: #c82333;
+    --color-danger-light: #f8d7da;
+    --color-warning: #fd7e14; /* Более темный оранжевый вместо ярко-желтого */
+    --color-warning-dark: #e06d06;
+    --color-warning-light: #fff3e0;
+    --color-info: #17a2b8;
+    --color-info-dark: #117a8b;
+    --color-info-light: #d1ecf1;
+    --color-gray: #6c757d;
+    --color-gray-dark: #5a6268;
+    --color-gray-light: #f8f9fa;
+    --color-gray-lighter: #f5f5f5;
+    --color-gray-border: #ddd;
+    --color-gray-border-light: #eee;
+    --color-white: #ffffff;
+    --color-black: #000000;
+    --color-text-primary: #333333;
+    --color-text-secondary: #666666;
+    --color-text-light: #999999;
+    --color-text-dark: #212529;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: var(--color-gray-lighter);
+    margin: 0;
+    padding: 0;
+    color: var(--color-text-primary);
+}
+
+.global-header {
+    background: var(--color-white);
+    border-bottom: 2px solid var(--color-gray-border-light);
+    padding: var(--spacing-lg) var(--spacing-xl);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--shadow-md);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.global-header h1 {
+    color: var(--color-text-primary);
+    font-size: var(--font-size-xl);
+    margin: 0;
+}
+
+.global-header .header-content {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xl);
+}
+
+.global-header .header-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.global-header .stats-container.header-stats {
+    display: flex;
+    gap: var(--spacing-xl);
+    align-items: center;
+    background: none;
+    padding: 0;
+    border: none;
+}
+
+.global-header .stats-container.header-stats .stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    font-size: 0.9em;
+    background: var(--color-gray-light);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--border-radius-md);
+    margin: 0;
+}
+
+.global-header .stats-container.header-stats .stat-item span:first-child {
+    color: var(--color-text-secondary);
+    font-size: 0.8em;
+    margin-bottom: 2px;
+}
+
+.global-header .stats-container.header-stats .stat-item span:last-child {
+    font-weight: bold;
+    font-size: 1.1em;
+    color: var(--color-text-primary);
+}
+
+.global-header .file-controls {
+    display: flex;
+    gap: var(--spacing-md);
+    align-items: center;
+}
+
+.global-header .file-controls button {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    background: var(--color-primary);
+    color: var(--color-white);
+    border: none;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    font-size: var(--font-size-base);
+}
+
+.global-header .file-controls button:hover {
+    background: var(--color-primary-dark);
+}
+
+/* Кнопка переключения темы */
+.theme-toggle-btn {
+    background: var(--color-gray-light);
+    border: none;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    font-size: var(--font-size-lg);
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: var(--spacing-md);
+    transition: all var(--transition-fast);
+    color: var(--color-text-primary);
+}
+
+.theme-toggle-btn:hover {
+    background: var(--color-gray);
+    color: var(--color-white);
+}
+
+.theme-toggle-btn .theme-icon {
+    transition: transform var(--transition-normal);
+}
+
+.theme-toggle-btn:hover .theme-icon {
+    transform: scale(1.1);
+}
+
+/* Адаптивность для кнопки темы */
+@media (max-width: 768px) {
+    .theme-toggle-btn {
+        width: 36px;
+        height: 36px;
+        margin-right: var(--spacing-sm);
+    }
+}
+
+.app-container {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    grid-template-rows: auto 1fr;
+    grid-template-areas: 
+        "left-sidebar main-content"
+        "left-sidebar main-content";
+    gap: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    min-height: calc(100vh - 80px);
+    padding: 20px;
+}
+
+.sidebar {
+    background: var(--color-white);
+    border-radius: 8px;
+    box-shadow: var(--shadow-md);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.sidebar-header {
+    padding: 15px 20px;
+    border-bottom: 2px solid var(--color-gray-border-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.sidebar-header h2 {
+    margin: 0;
+    color: var(--color-text-primary);
+    font-size: 1.3em;
+}
+
+.sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+
+.left-sidebar {
+    grid-area: left-sidebar;
+}
+
+.right-sidebar {
+    grid-area: right-sidebar;
+}
+
+.main-content {
+    grid-area: main-content;
+    background: var(--color-white);
+    border-radius: 8px;
+    box-shadow: var(--shadow-md);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.main-content header {
+    text-align: center;
+    padding: 20px;
+    border-bottom: 2px solid var(--color-gray-border-light);
+}
+
+.main-content header h1 {
+    color: var(--color-text-primary);
+    font-size: 2em;
+    margin: 0;
+}
+
+.replica-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    overflow: hidden;
+}
+
+.replica-panel h2 {
+    margin-bottom: 15px;
+    color: var(--color-text-primary);
+    font-size: 1.3em;
+}
+
+.replica-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.replica-controls select {
+    padding: 8px;
+    border: 1px solid var(--color-gray-border);
+    border-radius: 4px;
+    font-size: 14px;
+    min-width: 150px;
+    background: var(--color-white);
+    color: var(--color-text-primary);
+}
+
+.replica-controls textarea {
+    flex: 1;
+    min-width: 300px;
+    padding: 8px;
+    border: 1px solid var(--color-gray-border);
+    border-radius: 4px;
+    font-size: 14px;
+    resize: vertical;
+    min-height: 60px;
+    background: var(--color-white);
+    color: var(--color-text-primary);
+    line-height: 1.4;
+    vertical-align: middle;
+}
+
+.replica-controls button {
+    padding: var(--btn-padding-md);
+    background: var(--color-primary);
+    color: var(--color-white);
+    border: 2px solid transparent;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    font-size: var(--btn-font-size-md);
+    font-weight: 600;
+    transition: all var(--transition-fast);
+    min-width: 80px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.replica-controls button:disabled {
+    background: var(--color-gray);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.replica-controls button:not(:disabled):hover {
+    background: var(--color-primary-dark);
+    transform: scale(1.05);
+}
+
+.replicas-list {
+    flex: 1;
+    min-height: 100px;
+    border: 2px dashed var(--color-gray-border);
+    border-radius: 4px;
+    padding: 10px;
+    background: var(--color-gray-light);
+    overflow-y: auto;
+    max-height: calc(100vh - 300px);
+    margin-bottom: 15px;
+}
+
+/* Стили для панели управления ролями */
+.role-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+/* Стили для управления цветом спикера */
+.speaker-color-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 15px;
+    padding: 12px;
+    background: var(--color-gray-light);
+    border-radius: 4px;
+}
+
+.speaker-color-controls label {
+    font-weight: bold;
+    color: var(--color-text-primary);
+    font-size: 13px;
+}
+
+.color-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.color-picker {
+    width: 40px;
+    height: 32px;
+    border: 2px solid var(--color-gray-border);
+    border-radius: 4px;
+    cursor: pointer;
+    position: relative;
+    z-index: 1;
+    background: var(--color-white);
+    transition: all var(--transition-fast);
+}
+
+.color-picker:hover {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.color-picker:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+.color-picker::-webkit-color-swatch {
+    border: none;
+    border-radius: 2px;
+    transition: all var(--transition-fast);
+}
+
+.color-picker::-webkit-color-swatch:hover {
+    transform: scale(1.1);
+}
+
+.color-picker::-moz-color-swatch {
+    border: none;
+    border-radius: 2px;
+    transition: all var(--transition-fast);
+}
+
+.color-picker::-moz-color-swatch:hover {
+    transform: scale(1.1);
+}
+
+/* Темная тема для color picker */
+[data-theme="dark"] .color-picker {
+    background: var(--color-gray-lighter);
+    border-color: var(--color-gray-border);
+}
+
+[data-theme="dark"] .color-picker:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
+}
+
+.role-controls input, .role-controls select {
+    padding: 8px;
+    border: 1px solid var(--color-gray-border);
+    border-radius: 4px;
+    font-size: 14px;
+    background: var(--color-white);
+    color: var(--color-text-primary);
+}
+
+.role-controls input {
+    flex: 1;
+    min-width: 150px;
+}
+
+.role-controls select {
+    width: 120px;
+}
+
+.role-controls button {
+    padding: var(--btn-padding-md);
+    background: var(--color-primary);
+    color: var(--color-white);
+    border: 2px solid transparent;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    font-size: var(--btn-font-size-md);
+    font-weight: 600;
+    transition: all var(--transition-fast);
+    min-width: 80px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.role-controls button:hover {
+    background: var(--color-primary-dark);
+    transform: scale(1.05);
+}
+
+.roles-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.role-item {
+    display: flex;
+    flex-direction: column;
+    padding: 8px;
+    background: var(--color-white);
+    border: 1px solid var(--color-gray-border);
+    border-radius: 4px;
+    max-width: 100%;
+    gap: 4px;
+    min-width: 0;
+}
+
+.role-item.speaker {
+    border-left: 3px solid var(--color-primary);
+}
+
+.role-item.sound {
+    border-left: 3px solid var(--color-success);
+}
+
+/* Цвета для спикеров с использованием CSS переменных */
+.role-item.speaker.speaker-colored {
+    border-left-color: var(--speaker-border-color);
+}
+
+.replica-item.speaker-colored {
+    border-left: 5px solid var(--speaker-border-color);
+}
+
+.replica-role.speaker-colored {
+    background: transparent !important;
+    color: var(--speaker-text-color) !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.replica-role.speaker-colored i {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.role-item button.delete-btn {
+    padding: var(--btn-padding-xs);
+    background: transparent;
+    color: var(--color-danger);
+    border: 2px solid var(--color-danger);
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    font-size: var(--btn-font-size-xs);
+    font-weight: 600;
+    transition: all var(--transition-fast);
+    min-width: 20px;
+    width: 20px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.role-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+}
+
+.role-info .role-name {
+    font-weight: bold;
+    color: var(--color-text-primary);
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.role-info .role-type {
+    font-size: 0.8em;
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.role-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 4px;
+    min-width: 0;
+    flex-shrink: 0;
+}
+
+.role-item button.delete-btn:hover {
+    background: var(--color-white);
+    color: var(--color-danger);
+    transform: scale(1.05);
+    box-shadow: var(--shadow-md);
+}
+
+.role-item button.delete-btn:active {
+    transform: scale(0.95);
+}
+
+.role-item button.delete-btn:focus {
+    outline: 2px solid var(--color-danger);
+    outline-offset: 1px;
+}
+
+
+.replica-item button.delete-btn {
+    margin-left: 10px;
+    padding: var(--btn-padding-xs);
+    background: transparent;
+    color: var(--color-danger);
+    border: 2px solid var(--color-danger);
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    font-size: var(--btn-font-size-xs);
+    font-weight: 600;
+    transition: all var(--transition-fast);
+    min-width: 24px;
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    flex-shrink: 0;
+}
+
+.replica-item button.delete-btn:hover {
+    background: var(--color-white);
+    color: var(--color-danger);
+    transform: scale(1.05);
+    box-shadow: var(--shadow-md);
+}
+
+.replica-item button.delete-btn:active {
+    transform: scale(0.98);
+}
+
+.replica-item button.delete-btn:focus {
+    outline: 2px solid var(--color-danger);
+    outline-offset: 2px;
+}
+
+.speed-btn {
+    margin-left: 5px;
+    padding: var(--btn-padding-xs);
+    background: var(--color-gray);
+    color: var(--color-white);
+    border: 2px solid var(--color-gray);
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    font-size: var(--btn-font-size-xs);
+    font-weight: 600;
+    transition: all var(--transition-fast);
+    min-width: 40px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.speed-btn:hover {
+    background: var(--color-white);
+    color: var(--color-gray);
+    transform: scale(1.05);
+    box-shadow: var(--shadow-md);
+}
+
+.speed-btn:active {
+    transform: scale(0.95);
+}
+
+.speed-btn:focus {
+    outline: 2px solid var(--color-gray);
+    outline-offset: 1px;
+}
+
+.drag-handle {
+    margin-right: 10px;
+    cursor: move;
+    padding: 4px;
+    color: var(--color-gray);
+    font-size: 16px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.drag-handle:hover {
+    color: var(--color-gray-dark);
+    background: var(--color-gray-light);
+    border-radius: 3px;
+}
+
+.drag-handle i {
+    width: 16px;
+    height: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Стили для реплик спикеров */
+.replica-item {
+    display: grid;
+    grid-template-columns: 40px 1fr 40px;
+    grid-template-rows: auto auto auto;
+    grid-template-areas: 
+        "controls . actions"
+        "controls content actions"
+        "controls . actions";
+    align-items: center;
+    padding: 12px;
+    margin-bottom: 8px;
+    background: var(--color-white);
+    border: 1px solid var(--color-gray-border);
+    border-left: 5px solid var(--color-gray-border);
+    border-radius: 4px;
+    cursor: move;
+    transition: all 0.2s;
+    min-height: 50px;
+    gap: 10px;
+    background: linear-gradient(135deg, var(--color-gray-lighter) 0%, var(--color-white) 100%);
+}
+
+/* Контейнер для элементов управления реплик */
+.replica-controls {
+    grid-area: controls;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+}
+
+.replica-actions {
+    grid-area: actions;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    align-self: center;
+}
+
+.replica-content {
+    grid-area: content;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.replica-controls button {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: 1px solid var(--color-gray-border);
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+    background: var(--color-white);
+    color: var(--color-gray);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    min-width: 24px;
+    min-height: 24px;
+}
+
+.replica-controls button:hover {
+    background: var(--color-info);
+    color: var(--color-white);
+    border-color: var(--color-info);
+    transform: scale(1.1);
+}
+
+.replica-controls .drag-handle {
+    margin: 2px 0;
+    cursor: move;
+    padding: 2px;
+    color: var(--color-gray);
+    font-size: 14px;
+    flex-shrink: 0;
+    box-sizing: border-box;
+}
+
+.replica-controls .drag-handle:hover {
+    color: var(--color-gray-dark);
+    background: var(--color-gray-light);
+    border-radius: 2px;
+}
+
+.replica-controls .drag-handle i {
+    width: 14px;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.replica-item:hover {
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-1px);
+    background: linear-gradient(135deg, var(--color-gray-border-light) 0%, var(--color-gray-lighter) 100%);
+    color: var(--color-text-primary);
+}
+
+.replica-item.dragging {
+    opacity: 0.5;
+    transform: scale(0.98);
+}
+
+.replica-role {
+    font-weight: bold;
+    margin-right: 10px;
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    min-width: 60px;
+    text-align: left;
+}
+
+.replica-role.speaker {
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+}
+
+.replica-role.sound {
+    background: var(--color-success-light);
+    color: var(--color-success);
+}
+
+.replica-text {
+    flex: 1;
+    margin-right: 10px;
+    line-height: 1.4;
+    color: var(--color-text-primary);
+}
+
+.replica-word-count {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    margin-right: 10px;
+    background: var(--color-gray-light);
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+.replica-actions {
+    grid-area: actions;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    align-self: center;
+}
+
+.replica-actions button {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 2px solid;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    font-size: var(--btn-font-size-xs);
+    font-weight: 600;
+    transition: all var(--transition-fast);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    align-self: center;
+    background: transparent;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    min-width: 32px;
+    min-height: 32px;
+}
+
+.replica-actions button i {
+    width: 16px;
+    height: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.replica-edit-btn {
+    border-color: var(--color-warning);
+    color: var(--color-warning);
+}
+
+.replica-edit-btn:hover {
+    background: var(--color-warning);
+    color: var(--color-white);
+    transform: scale(1.05);
+}
+
+.replica-move-up-btn {
+    width: 24px !important;
+    height: 24px !important;
+    padding: 0 !important;
+    border: 1px solid var(--color-info) !important;
+    border-radius: 3px !important;
+    cursor: pointer !important;
+    font-size: 12px !important;
+    background: var(--color-white) !important;
+    color: var(--color-info) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.2s !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+    min-width: 24px !important;
+    min-height: 24px !important;
+}
+
+.replica-move-up-btn:hover {
+    background: var(--color-info) !important;
+    color: var(--color-white) !important;
+    border-color: var(--color-info) !important;
+    transform: scale(1.1) !important;
+}
+
+.replica-move-down-btn {
+    width: 24px !important;
+    height: 24px !important;
+    padding: 0 !important;
+    border: 1px solid var(--color-info) !important;
+    border-radius: 3px !important;
+    cursor: pointer !important;
+    font-size: 12px !important;
+    background: var(--color-white) !important;
+    color: var(--color-info) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.2s !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+    min-width: 24px !important;
+    min-height: 24px !important;
+}
+
+.replica-move-down-btn:hover {
+    background: var(--color-info) !important;
+    color: var(--color-white) !important;
+    border-color: var(--color-info) !important;
+    transform: scale(1.1) !important;
+}
+
+.replica-delete-btn {
+    width: 24px !important;
+    height: 24px !important;
+    padding: 0 !important;
+    border: 1px solid var(--color-danger) !important;
+    border-radius: 3px !important;
+    cursor: pointer !important;
+    font-size: 12px !important;
+    background: var(--color-white) !important;
+    color: var(--color-danger) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.2s !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+    min-width: 24px !important;
+    min-height: 24px !important;
+}
+
+.replica-delete-btn:hover {
+    background: var(--color-danger) !important;
+    color: var(--color-white) !important;
+    border-color: var(--color-danger) !important;
+    transform: scale(1.1) !important;
+}
+
+/* Стили для звуковых эффектов */
+.sound-effect-item {
+    display: grid;
+    grid-template-columns: 40px 1fr 40px;
+    grid-template-rows: auto auto auto;
+    grid-template-areas: 
+        "controls . actions"
+        "controls content actions"
+        "controls . actions";
+    align-items: center;
+    padding: 12px;
+    margin-bottom: 8px;
+    background: var(--color-white);
+    border: 1px solid var(--color-gray-border);
+    border-left: 5px solid var(--color-success);
+    border-radius: 4px;
+    transition: all 0.2s;
+    min-height: 50px;
+    gap: 10px;
+    background: linear-gradient(135deg, var(--color-gray-lighter) 0%, var(--color-white) 100%);
+}
+
+/* Контейнер для элементов управления звуковых эффектов */
+.sound-controls {
+    grid-area: controls;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+}
+
+.sound-content {
+    grid-area: content;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.sound-actions {
+    grid-area: actions;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    align-self: center;
+}
+
+.sound-controls button {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: 1px solid var(--color-gray-border);
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+    background: var(--color-white);
+    color: var(--color-gray);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    min-width: 24px;
+    min-height: 24px;
+}
+
+.sound-controls button:hover {
+    background: var(--color-info);
+    color: var(--color-white);
+    border-color: var(--color-info);
+    transform: scale(1.1);
+}
+
+.sound-controls .drag-handle {
+    margin: 2px 0;
+    cursor: move;
+    padding: 2px;
+    color: var(--color-gray);
+    font-size: 14px;
+    flex-shrink: 0;
+    box-sizing: border-box;
+}
+
+.sound-controls .drag-handle:hover {
+    color: var(--color-gray-dark);
+    background: var(--color-gray-light);
+    border-radius: 2px;
+}
+
+.sound-controls .drag-handle i {
+    width: 14px;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.sound-effect-item:hover {
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-1px);
+    background: linear-gradient(135deg, var(--color-gray-border-light) 0%, var(--color-gray-lighter) 100%);
+    color: var(--color-text-primary);
+}
+
+.sound-content {
+    grid-area: content;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    color: var(--color-text-primary);
+}
+
+.sound-role {
+    font-weight: bold;
+    padding: 4px 8px;
+    background: var(--color-success-light);
+    color: var(--color-success);
+    border-radius: 3px;
+    font-size: 12px;
+    min-width: 60px;
+    text-align: center;
+}
+
+.sound-icon {
+    font-size: 16px;
+    color: var(--color-success);
+    background: var(--color-white);
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.sound-effect-item:hover .sound-icon {
+    color: var(--color-white);
+    background: var(--color-success);
+}
+
+.sound-duration {
+    padding: 4px 8px;
+    background: var(--color-white);
+    color: var(--color-success);
+    border: 1px solid var(--color-success);
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.sound-effect-item:hover .sound-duration {
+    background: var(--color-success);
+    color: var(--color-white);
+    border-color: var(--color-success);
+}
+
+.sound-actions {
+    grid-area: actions;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    align-self: center;
+}
+
+.sound-actions button {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 2px solid;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    font-size: var(--btn-font-size-xs);
+    font-weight: 600;
+    transition: all var(--transition-fast);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    align-self: center;
+    background: transparent;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    min-width: 32px;
+    min-height: 32px;
+}
+
+.sound-actions button i {
+    width: 16px;
+    height: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.sound-move-up-btn {
+    width: 24px !important;
+    height: 24px !important;
+    padding: 0 !important;
+    border: 1px solid var(--color-info) !important;
+    border-radius: 3px !important;
+    cursor: pointer !important;
+    font-size: 12px !important;
+    background: var(--color-white) !important;
+    color: var(--color-info) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.2s !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+    min-width: 24px !important;
+    min-height: 24px !important;
+}
+
+.sound-move-up-btn:hover {
+    background: var(--color-info) !important;
+    color: var(--color-white) !important;
+    border-color: var(--color-info) !important;
+    transform: scale(1.1) !important;
+}
+
+.sound-move-down-btn {
+    width: 24px !important;
+    height: 24px !important;
+    padding: 0 !important;
+    border: 1px solid var(--color-info) !important;
+    border-radius: 3px !important;
+    cursor: pointer !important;
+    font-size: 12px !important;
+    background: var(--color-white) !important;
+    color: var(--color-info) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.2s !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+    min-width: 24px !important;
+    min-height: 24px !important;
+}
+
+.sound-move-down-btn:hover {
+    background: var(--color-info) !important;
+    color: var(--color-white) !important;
+    border-color: var(--color-info) !important;
+    transform: scale(1.1) !important;
+}
+
+.sound-delete-btn {
+    width: 24px !important;
+    height: 24px !important;
+    padding: 0 !important;
+    border: 1px solid var(--color-danger) !important;
+    border-radius: 3px !important;
+    cursor: pointer !important;
+    font-size: 12px !important;
+    background: var(--color-white) !important;
+    color: var(--color-danger) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.2s !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+    min-width: 24px !important;
+    min-height: 24px !important;
+}
+
+.sound-delete-btn:hover {
+    background: var(--color-danger) !important;
+    color: var(--color-white) !important;
+    border-color: var(--color-danger) !important;
+    transform: scale(1.1) !important;
+}
+
+/* Темная тема для звуковых эффектов */
+@media (prefers-color-scheme: dark) {
+    .sound-effect-item {
+        background: linear-gradient(135deg, var(--dark-color-success-light) 0%, var(--dark-color-gray-lighter) 100%);
+        border-color: var(--dark-color-gray-border);
+        border-left-color: var(--dark-color-success);
+    }
+    
+    .sound-effect-item:hover {
+        background: linear-gradient(135deg, var(--dark-color-gray-border) 0%, var(--dark-color-gray-lighter) 100%);
+        color: var(--dark-color-text-primary);
+    }
+    
+    .sound-role {
+        background: var(--dark-color-success);
+        color: var(--dark-color-white);
+    }
+    
+    .sound-icon {
+        color: var(--dark-color-success);
+        background: var(--dark-color-gray-lighter);
+    }
+    
+    .sound-effect-item:hover .sound-icon {
+        color: var(--dark-color-white);
+        background: var(--dark-color-success);
+    }
+    
+    .sound-duration {
+        background: var(--dark-color-gray-lighter);
+        color: var(--dark-color-success);
+        border-color: var(--dark-color-success);
+    }
+    
+    .sound-effect-item:hover .sound-duration {
+        background: var(--dark-color-success);
+        color: var(--dark-color-white);
+        border-color: var(--dark-color-success);
+    }
+    
+    .sound-delete-btn {
+        border-color: var(--dark-color-danger);
+        color: var(--dark-color-danger);
+    }
+    
+    .sound-delete-btn:hover {
+        background: var(--dark-color-danger);
+        color: var(--dark-color-white);
+    }
+}
+
+/* Ручная темная тема для звуковых эффектов */
+[data-theme="dark"] .sound-effect-item {
+    background: linear-gradient(135deg, var(--dark-color-success-light) 0%, var(--dark-color-gray-lighter) 100%);
+    border-color: var(--dark-color-gray-border);
+    border-left-color: var(--dark-color-success);
+}
+
+[data-theme="dark"] .sound-effect-item:hover {
+    background: linear-gradient(135deg, var(--dark-color-gray-border) 0%, var(--dark-color-gray-lighter) 100%);
+    color: var(--dark-color-text-primary);
+}
+
+[data-theme="dark"] .sound-role {
+    background: var(--dark-color-success);
+    color: var(--dark-color-white);
+}
+
+[data-theme="dark"] .sound-icon {
+    color: var(--dark-color-success);
+    background: var(--dark-color-gray-lighter);
+}
+
+[data-theme="dark"] .sound-effect-item:hover .sound-icon {
+    color: var(--dark-color-white);
+    background: var(--dark-color-success);
+}
+
+[data-theme="dark"] .sound-duration {
+    background: var(--dark-color-gray-lighter);
+    color: var(--dark-color-success);
+    border-color: var(--dark-color-success);
+}
+
+[data-theme="dark"] .sound-effect-item:hover .sound-duration {
+    background: var(--dark-color-success);
+    color: var(--dark-color-white);
+    border-color: var(--dark-color-success);
+}
+
+[data-theme="dark"] .sound-delete-btn {
+    border-color: var(--dark-color-danger);
+    color: var(--dark-color-danger);
+}
+
+[data-theme="dark"] .sound-delete-btn:hover {
+    background: var(--dark-color-danger);
+    color: var(--dark-color-white);
+}
+
+/* Улучшение контраста для sound-effect-item в светлой теме */
+:root:not([data-theme="dark"]) .sound-effect-item {
+    background: var(--color-white);
+    border: 1px solid var(--color-gray-border);
+    border-left: 5px solid var(--color-success);
+}
+
+:root:not([data-theme="dark"]) .sound-effect-item:hover {
+    background: linear-gradient(135deg, var(--color-gray-border-light) 0%, var(--color-gray-lighter) 100%);
+    color: var(--color-text-primary);
+}
+
+:root:not([data-theme="dark"]) .sound-role {
+    background: var(--color-success-light);
+    color: var(--color-success);
+}
+
+:root:not([data-theme="dark"]) .sound-icon {
+    color: var(--color-success);
+    background: var(--color-white);
+}
+
+:root:not([data-theme="dark"]) .sound-duration {
+    background: var(--color-white);
+    color: var(--color-success);
+    border: 1px solid var(--color-success);
+}
+
+:root:not([data-theme="dark"]) .sound-effect-item:hover .sound-icon {
+    color: var(--color-white);
+    background: var(--color-success);
+}
+
+:root:not([data-theme="dark"]) .sound-effect-item:hover .sound-duration {
+    background: var(--color-success);
+    color: var(--color-white);
+    border-color: var(--color-success);
+}
+
+/* Темная тема для реплик спикеров */
+@media (prefers-color-scheme: dark) {
+    .replica-item {
+        background: linear-gradient(135deg, var(--dark-color-gray-lighter) 0%, var(--dark-color-gray-border-light) 100%);
+        border-color: var(--dark-color-gray-border);
+        border-left-color: var(--dark-color-gray-border);
+    }
+    
+    .replica-item:hover {
+        background: linear-gradient(135deg, var(--dark-color-gray-border) 0%, var(--dark-color-gray-lighter) 100%);
+        color: var(--dark-color-text-primary);
+    }
+}
+
+/* Ручная темная тема для реплик спикеров */
+[data-theme="dark"] .replica-item {
+    background: linear-gradient(135deg, var(--dark-color-gray-lighter) 0%, var(--dark-color-gray-border-light) 100%);
+    border-color: var(--dark-color-gray-border);
+    border-left-color: var(--dark-color-gray-border);
+}
+
+[data-theme="dark"] .replica-item:hover {
+    background: linear-gradient(135deg, var(--dark-color-gray-border) 0%, var(--dark-color-gray-lighter) 100%);
+    color: var(--dark-color-text-primary);
+}
+
+/* Темная тема для реплик спикеров с цветом */
+@media (prefers-color-scheme: dark) {
+    .replica-item.speaker-colored {
+        border-left-color: var(--speaker-border-color);
+    }
+}
+
+[data-theme="dark"] .replica-item.speaker-colored {
+    border-left-color: var(--speaker-border-color);
+}
+
+/* Улучшение контраста для speaker-colored элементов в светлой теме */
+:root:not([data-theme="dark"]) .replica-item.speaker-colored {
+    border-left-color: var(--speaker-border-color);
+    background: var(--color-white) !important;
+}
+
+:root:not([data-theme="dark"]) .replica-item.speaker-colored:hover {
+    background: var(--color-gray-light) !important;
+}
+
+.replica-item.speaker-colored .replica-role {
+    color: var(--speaker-text-color, var(--color-text-primary)) !important;
+}
+
+.replica-item.speaker-colored .replica-role.speaker {
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+}
+
+/* Удалены устаревшие стили для replica-edit-btn и replica-delete-btn */
+
+/* Адаптивность */
+@media (max-width: 1024px) {
+    .app-container {
+        grid-template-columns: 200px 1fr;
+    }
+    
+    .role-actions {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+    
+    .role-item button.delete-btn {
+        min-width: 20px;
+        width: 20px;
+        height: 20px;
+        padding: var(--btn-padding-xs);
+    }
+    
+    .speed-btn {
+        min-width: 35px;
+        height: 22px;
+        padding: var(--btn-padding-xs);
+        font-size: var(--btn-font-size-xs);
+        gap: 2px;
+    }
+}
+
+@media (max-width: 768px) {
+    .app-container {
+        grid-template-columns: 1fr;
+        grid-template-areas: 
+            "left-sidebar"
+            "main-content";
+        height: auto;
+        padding: 10px;
+    }
+    
+    .global-header {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+    }
+    
+    .global-header .header-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        width: 100%;
+    }
+    
+    .global-header .stats-container.header-stats {
+        flex-direction: row;
+        gap: 10px;
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .global-header .stats-container.header-stats .stat-item {
+        margin: 0;
+        flex: 1;
+    }
+    
+    .global-header .header-controls {
+        width: 100%;
+        justify-content: space-between;
+        display: flex;
+        align-items: center;
+    }
+    
+    .global-header .file-controls {
+        align-self: center;
+        width: auto;
+        justify-content: flex-start;
+        margin: 0;
+    }
+    
+    .sidebar-toggle {
+        display: inline-flex;
+    }
+    
+    .replica-controls {
+        flex-direction: column;
+    }
+    
+    .replica-controls input, .replica-controls select, .replica-controls textarea {
+        min-width: auto;
+        width: 100%;
+    }
+    
+    .roles-list {
+        flex-direction: column;
+    }
+}
+
+/* Анимации для модальных окон */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOut {
+    from {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+}
+
+/* Стили для тостов/уведомлений об удалении с возможностью отмены */
+.toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 16px 20px;
+    background: var(--color-gray-lighter);
+    border: 2px solid var(--color-gray-border);
+    border-radius: 8px;
+    box-shadow: var(--shadow-lg);
+    z-index: 10001;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: slideIn 0.3s ease-out;
+    max-width: 400px;
+}
+
+.toast.warning {
+    border-color: var(--color-warning);
+    background: var(--color-warning-light);
+}
+
+.toast.success {
+    border-color: var(--color-success);
+    background: var(--color-success-light);
+}
+
+.toast.error {
+    border-color: var(--color-danger);
+    background: var(--color-danger-light);
+}
+
+.toast-content {
+    flex: 1;
+    font-size: 14px;
+    color: var(--color-text-primary);
+    line-height: 1.4;
+}
+
+.toast-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* Стили для кнопок toast (когда используются без классов btn) */
+.toast-btn {
+    padding: var(--btn-padding-sm);
+    border: 2px solid var(--color-gray);
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    font-size: var(--btn-font-size-sm);
+    font-weight: 600;
+    transition: all var(--transition-fast);
+    min-width: 60px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.toast-btn.undo {
+    background: var(--color-primary);
+    color: var(--color-white);
+    border-color: var(--color-primary);
+}
+
+.toast-btn.undo:hover {
+    background: var(--color-primary-dark);
+    transform: scale(1.05);
+}
+
+.toast-btn.close {
+    background: var(--color-gray-light);
+    color: var(--color-text-primary);
+    border-color: var(--color-gray);
+}
+
+.toast-btn.close:hover {
+    background: var(--color-gray);
+    transform: scale(1.05);
+}
+
+/* Стили для кнопок с классами btn */
+.btn {
+    padding: var(--btn-padding-md);
+    border: 2px solid transparent;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    font-size: var(--btn-font-size-md);
+    font-weight: 600;
+    transition: all var(--transition-fast);
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    vertical-align: middle;
+    border: none;
+    min-width: 80px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.btn i {
+    width: 16px;
+    height: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.btn-icon-only {
+    min-width: 40px !important;
+    min-height: 40px !important;
+    width: 40px;
+    height: 40px;
+    padding: 8px !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0 !important;
+}
+
+.btn-icon-only i {
+    width: 20px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin: 0 !important;
+    color: var(--color-white) !important;
+    fill: var(--color-white) !important;
+}
+
+/* Ensure icon visibility in dark theme */
+[data-theme="dark"] .btn-icon-only i {
+    color: var(--dark-color-white) !important;
+    fill: var(--dark-color-white) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+    .btn-icon-only i {
+        color: var(--dark-color-white) !important;
+        fill: var(--dark-color-white) !important;
+    }
+}
+
+.btn-sm i {
+    width: 14px;
+    height: 14px;
+    font-size: 12px;
+}
+
+.btn-primary {
+    background: var(--color-primary);
+    color: var(--color-white);
+}
+
+.btn-primary:hover {
+    background: var(--color-primary-dark);
+    transform: scale(1.05);
+}
+
+.btn-primary:active {
+    transform: scale(0.98);
+}
+
+.btn-outline-secondary {
+    background: transparent;
+    color: var(--color-gray);
+    border: 2px solid var(--color-gray);
+}
+
+.btn-outline-secondary:hover {
+    background: var(--color-gray);
+    color: var(--color-white);
+    transform: scale(1.05);
+}
+
+/* Кнопка случайного цвета с размерами как у color picker */
+.btn-color-picker {
+    width: 40px;
+    height: 32px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    color: var(--color-gray);
+    border: 2px solid var(--color-gray);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: var(--btn-font-size-xs);
+    font-weight: 600;
+    transition: all var(--transition-fast);
+    min-width: 40px;
+}
+
+.btn-color-picker:hover {
+    background: var(--color-gray);
+    color: var(--color-white);
+    transform: scale(1.05);
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.btn-color-picker:active {
+    transform: scale(0.95);
+}
+
+.btn-color-picker:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.btn-secondary {
+    background: var(--color-gray);
+    color: var(--color-white);
+}
+
+.btn-secondary:hover {
+    background: var(--color-gray-dark);
+    transform: scale(1.05);
+}
+
+.btn-danger {
+    background: transparent;
+    color: var(--color-danger);
+    border: 2px solid var(--color-danger);
+}
+
+.btn-danger:hover {
+    background: var(--color-danger);
+    color: var(--color-white);
+    transform: scale(1.05);
+}
+
+.btn-warning {
+    background: var(--color-warning);
+    color: var(--color-text-dark); /* Темный текст для лучшей контрастности на оранжевом фоне */
+}
+
+.btn-warning:hover {
+    background: var(--color-warning-dark);
+    color: var(--color-white); /* Белый текст при наведении */
+    transform: scale(1.05);
+}
+
+.btn-sm {
+    padding: var(--btn-padding-sm);
+    font-size: var(--btn-font-size-sm);
+    min-width: 60px;
+}
+
+/* Анимация для удаления элементов */
+.replica-item.deleting,
+.role-item.deleting {
+    animation: slideOut 0.3s ease-out forwards;
+    transform-origin: center;
+}
+
+/* Стили для элементов в процессе удаления */
+.deleting {
+    pointer-events: none;
+    opacity: 0.7;
+}
