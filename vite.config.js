@@ -9,6 +9,10 @@ export default defineConfig({
     minify: 'esbuild',
     sourcemap: true,
     rollupOptions: {
+      input: {
+        main: 'index.html',
+        viewer: 'viewer.html'
+      },
       output: {
         manualChunks: {
           'feather-icons': ['feather-icons'],
