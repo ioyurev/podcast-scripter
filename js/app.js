@@ -1,3 +1,12 @@
+import feather from 'feather-icons';
+
+// Импорты всех необходимых классов
+import { logger } from './logger.js';
+import { Speaker, SoundEffect} from './models/role.js';
+import { DataManager } from './services/data-manager.js';
+import { FileHandler } from './services/file-handler.js';
+import { UIComponents } from './ui/components.js';
+
 /**
  * Основная логика приложения
  */
@@ -6,6 +15,7 @@ class PodcastScripterApp {
         this.dataManager = null;
         this.fileHandler = null;
         this.uiComponents = null;
+        this.featherInitialized = false;
         
         logger.info('Инициализация приложения создания скрипта подкаста');
         this.init();
@@ -159,6 +169,24 @@ class PodcastScripterApp {
             return false;
         }
     }
+
+    /**
+     * Инициализация Feather Icons
+     */
+    initFeatherIcons() {
+        if (!this.featherInitialized) {
+            feather.replace();
+            this.featherInitialized = true;
+            logger.info('Feather Icons инициализированы');
+        }
+    }
+
+    /**
+     * Обновление Feather Icons
+     */
+    updateFeatherIcons() {
+        feather.replace();
+    }
 }
 
 // Инициализация приложения при загрузке DOM
@@ -185,3 +213,6 @@ window.addEventListener('beforeunload', () => {
 });
 
 logger.info('Скрипт приложения загружен');
+
+// Экспорт для использования в модулях
+window.PodcastScripterApp = PodcastScripterApp;

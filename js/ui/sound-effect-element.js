@@ -1,3 +1,5 @@
+import { BaseReplicaElement } from './base-element.js';
+
 /**
  * Класс для элемента звукового эффекта, наследующийся от BaseReplicaElement
  */
@@ -64,3 +66,6 @@ class SoundEffectElement extends BaseReplicaElement {
         return 'sound-delete-btn';
     }
 }
+
+// Экспорт для использования в модулях
+export { SoundEffectElement };

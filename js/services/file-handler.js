@@ -1,3 +1,5 @@
+import { logger } from '../logger.js';
+
 /**
  * Обработчик файловых операций
  */
@@ -228,3 +230,6 @@ class FileHandler {
         });
     }
 }
+
+// Экспорт для использования в модулях
+export { FileHandler };

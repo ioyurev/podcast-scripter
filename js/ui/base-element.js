@@ -201,3 +201,6 @@ class BaseReplicaElement {
         throw new Error('getGridTemplateAreas must be implemented');
     }
 }
+
+// Экспорт для использования в модулях
+export { BaseReplicaElement };

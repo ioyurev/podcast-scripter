@@ -1,3 +1,5 @@
+import { BaseReplicaElement } from './base-element.js';
+
 /**
  * Класс для элемента реплики спикера, наследующийся от BaseReplicaElement
  */
@@ -119,3 +121,6 @@ class SpeakerReplicaElement extends BaseReplicaElement {
         return color;
     }
 }
+
+// Экспорт для использования в модулях
+export { SpeakerReplicaElement };

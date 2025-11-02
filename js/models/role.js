@@ -1,3 +1,7 @@
+import { logger } from '../logger.js';
+
+import { BaseModel, Collection } from './base.js';
+
 /**
  * Базовый класс для роли
  */
@@ -236,4 +240,29 @@ class RoleManager extends Collection {
         });
         return manager;
     }
+
+    /**
+     * Обновление роли в коллекции
+     * @param {string} id - ID роли для обновления
+     * @param {Role} newRole - Новая роль для замены
+     * @returns {boolean} Успешно ли обновлено
+     */
+    update(id, newRole) {
+        const index = this.items.findIndex(item => item.id === id);
+        if (index !== -1) {
+            this.items[index] = newRole;
+            this.updateTimestamp();
+            logger.debug('Роль обновлена в менеджере', {
+                roleId: id,
+                roleName: newRole.name,
+                roleType: newRole.type
+            });
+            return true;
+        }
+        return false;
+    }
 }
+
+
+// Экспорт для использования в модулях
+export { Role, Speaker, SoundEffect, RoleManager };

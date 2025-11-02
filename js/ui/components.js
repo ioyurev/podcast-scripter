@@ -1,3 +1,12 @@
+import feather from 'feather-icons';
+
+import { logger } from '../logger.js';
+import { Replica } from '../models/replica.js';
+import { Speaker, SoundEffect } from '../models/role.js';
+
+import { SoundEffectElement } from './sound-effect-element.js';
+import { SpeakerReplicaElement } from './speaker-replica-element.js';
+
 /**
  * Компоненты пользовательского интерфейса
  */
@@ -264,9 +273,9 @@ class UIComponents {
             const hslMatch = color.match(/hsla?\((\d+),\s*(\d+)%,\s*(\d+)%/);
             if (!hslMatch) return '#007bff'; // возвращаем цвет по умолчанию при ошибке
 
-            let h = parseInt(hslMatch[1]) / 360;
-            let s = parseInt(hslMatch[2]) / 100;
-            let l = parseInt(hslMatch[3]) / 100;
+            const h = parseInt(hslMatch[1]) / 360;
+            const s = parseInt(hslMatch[2]) / 100;
+            const l = parseInt(hslMatch[3]) / 100;
 
             let r, g, b;
             if (s === 0) {
@@ -857,8 +866,7 @@ class UIComponents {
         const replica = this.dataManager.replicaManager.findById(replicaId);
         if (!replica) return;
 
-        const role = this.dataManager.roleManager.findById(replica.roleId);
-        const roleName = role ? role.name : 'Без роли';
+        // const role = this.dataManager.roleManager.findById(replica.roleId); // Removed unused variable
 
         // Показываем модальное окно для редактирования
         this.showEditReplicaModal(replica, () => {
@@ -919,7 +927,7 @@ class UIComponents {
             align-items: center;
             gap: 10px;
         `;
-        modalTitle.innerHTML = `✏️ Редактирование реплики`;
+        modalTitle.innerHTML = '✏️ Редактирование реплики';
 
         // Форма редактирования
         const form = document.createElement('form');
@@ -1059,16 +1067,13 @@ class UIComponents {
         const replica = this.dataManager.replicaManager.findById(replicaId);
         if (!replica) return;
 
-        const role = this.dataManager.roleManager.findById(replica.roleId);
-        const roleName = role ? role.name : 'Без роли';
-
         // Сохраняем данные для отмены
         const replicaData = replica.toJSON();
 
         // Показываем кастомное модальное окно
         this.showDeleteConfirmationModal(
             'Удаление реплики',
-            `Вы уверены, что хотите удалить реплику от "${roleName}" с текстом: "${replica.text.substring(0, 50)}${replica.text.length > 50 ? '...' : ''}"? Это действие можно отменить.`,
+            `Вы уверены, что хотите удалить реплику с ID "${replicaId}" с текстом: "${replica.text.substring(0, 50)}${replica.text.length > 50 ? '...' : ''}"? Это действие можно отменить.`,
             () => {
                 const success = this.dataManager.removeReplica(replicaId);
                 if (success) {
@@ -1082,7 +1087,7 @@ class UIComponents {
 
                     // Показываем уведомление с возможностью отмены
                     this.showToast(
-                        `Реплика от "${roleName}" удалена`,
+                        `Реплика с ID "${replicaId}" удалена`,
                         () => {
                             // Функция отмены
                             const restoredReplica = Replica.fromJSON(replicaData);
@@ -1431,11 +1436,6 @@ class UIComponents {
             toast.remove();
         });
         toastActions.appendChild(undoBtn);
-        
-        // Инициализация Feather Icons для кнопки отмены в тосте
-        if (typeof feather !== 'undefined') {
-            feather.replace({ selector: 'i[data-feather="rotate-ccw"]' });
-        }
         }
 
         const closeBtn = document.createElement('button');
@@ -1446,21 +1446,24 @@ class UIComponents {
         });
         toastActions.appendChild(closeBtn);
 
-        // Инициализация Feather Icons для кнопки закрытия в тосте
-        if (typeof feather !== 'undefined') {
-            feather.replace({ selector: 'i[data-feather="x"]' });
-        }
-
         toast.appendChild(toastContent);
         toast.appendChild(toastActions);
         document.body.appendChild(toast);
 
-        // Автоматическое удаление через 5 секунд
+        // Инициализация Feather Icons для всех иконок в тосте
+        // Используем requestAnimationFrame для гарантии, что элемент уже добавлен в DOM
+        if (typeof feather !== 'undefined') {
+            requestAnimationFrame(() => {
+                feather.replace();
+            });
+        }
+
+        // Автоматическое удаление через 15 секунд (как вы просили)
         setTimeout(() => {
             if (document.body.contains(toast)) {
                 toast.remove();
             }
-        }, 5000);
+        }, 15000);
 
         return toast;
     }
@@ -1581,3 +1584,6 @@ class UIComponents {
         });
     }
 }
+
+// Экспорт для использования в модулях
+export { UIComponents };

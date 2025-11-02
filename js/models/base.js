@@ -152,3 +152,6 @@ class Collection {
         return this.items.map(item => item.toJSON());
     }
 }
+
+// Экспорт для использования в модулях
+export { BaseModel, Collection };

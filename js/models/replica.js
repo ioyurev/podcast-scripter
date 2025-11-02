@@ -1,3 +1,8 @@
+import { logger } from '../logger.js';
+
+import { BaseModel, Collection } from './base.js';
+import { Speaker, SoundEffect } from './role.js';
+
 /**
  * Класс для реплики
  */
@@ -243,3 +248,6 @@ class ReplicaManager extends Collection {
         return manager;
     }
 }
+
+// Экспорт для использования в модулях
+export { Replica, ReplicaManager };

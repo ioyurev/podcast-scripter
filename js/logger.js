@@ -128,3 +128,7 @@ class Logger {
 // Глобальный экземпляр логгера
 const logger = new Logger();
 logger.info('Система логирования инициализирована');
+
+// Экспорт для использования в модулях
+window.logger = logger;
+export { logger, Logger };

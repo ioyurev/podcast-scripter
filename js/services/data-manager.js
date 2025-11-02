@@ -1,3 +1,9 @@
+import { logger } from '../logger.js';
+import { ReplicaManager, Replica  } from '../models/replica.js';
+import { RoleManager, Speaker, SoundEffect, Role  } from '../models/role.js';
+
+
+
 /**
  * Менеджер данных приложения
  */
@@ -262,3 +268,6 @@ class DataManager {
         logger.info('Все данные очищены');
     }
 }
+
+// Экспорт для использования в модулях
+export { DataManager };
