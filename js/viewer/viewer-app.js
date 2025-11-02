@@ -1,8 +1,9 @@
 import { logger } from '../logger.js';
 import { ScriptData } from '../models/script-data.js';
-import { StorageManager } from './storage-manager.js';
+
 import { DataLoader } from './data-loader.js';
 import { ScriptViewer } from './script-viewer.js';
+import { StorageManager } from './storage-manager.js';
 import { ViewerUIComponents } from './ui-components.js';
 
 /**
@@ -358,15 +359,10 @@ class ViewerApp {
      * Возврат к редактору
      */
     backToEditor() {
-        if (window.opener && !window.opener.closed) {
-            window.opener.focus();
-            window.close();
+        if (window.history.length > 1) {
+            window.history.back();
         } else {
-            if (window.history.length > 1) {
-                window.history.back();
-            } else {
-                window.location.href = 'index.html';
-            }
+            window.location.href = 'index.html';
         }
     }
 

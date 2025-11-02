@@ -199,18 +199,11 @@ class ViewerUIComponents {
      * Обработка возврата к редактору
      */
     handleBackToEditor() {
-        // Проверяем, открыта ли вкладка редактора (если была открыта через window.open)
-        if (window.opener && !window.opener.closed) {
-            window.opener.focus();
-            window.close();
+        // Возвращаемся к редактору через историю или перенаправляем на главную страницу
+        if (window.history.length > 1) {
+            window.history.back();
         } else {
-            // Если открыта в той же вкладке, возвращаемся назад
-            if (window.history.length > 1) {
-                window.history.back();
-            } else {
-                // Если нет истории, перенаправляем на главную страницу
-                window.location.href = 'index.html';
-            }
+            window.location.href = 'index.html';
         }
     }
 

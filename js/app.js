@@ -190,25 +190,15 @@ class PodcastScripterApp {
             const storageKey = 'podcastScriptViewerData';
             localStorage.setItem(storageKey, JSON.stringify(data));
 
-            // Открываем режим просмотра в новой вкладке
+            // Переходим в режим просмотра в той же вкладке
             const viewerUrl = 'viewer.html';
-            const viewerWindow = window.open(viewerUrl, '_blank');
+            window.location.href = viewerUrl;
 
-            if (viewerWindow) {
-                logger.info('Режим просмотра открыт', {
-                    rolesCount: data.roles.length,
-                    replicasCount: data.replicas.length
-                });
-                return true;
-            } else {
-                logger.error('Не удалось открыть режим просмотра - блокировщик всплывающих окон');
-                // Альтернативный вариант - открытие в той же вкладке
-                if (confirm('Пожалуйста, разрешите всплывающие окна для открытия режима просмотра. Открыть в текущей вкладке?')) {
-                    window.location.href = viewerUrl;
-                    return true;
-                }
-                return false;
-            }
+            logger.info('Режим просмотра открыт', {
+                rolesCount: data.roles.length,
+                replicasCount: data.replicas.length
+            });
+            return true;
         } catch (error) {
             logger.error('Ошибка при открытии режима просмотра', {
                 error: error.message

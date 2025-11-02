@@ -43,8 +43,8 @@ class ScriptData extends BaseModel {
     calculateStatistics() {
         let totalWords = 0;
         let totalDuration = 0;
-        let roleCount = this.roles.length;
-        let replicaCount = this.replicas.length;
+        const roleCount = this.roles.length;
+        const replicaCount = this.replicas.length;
 
         // Подсчет слов для спикеров
         const speakerReplicas = this.replicas.filter(replica => {
