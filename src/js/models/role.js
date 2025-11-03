@@ -33,8 +33,16 @@ class Role extends BaseModel {
     static fromJSON(json) {
         const role = new Role(json.name, json.type);
         role.id = json.id;
-        role.createdAt = new Date(json.createdAt);
-        role.updatedAt = new Date(json.updatedAt);
+        
+        // Проверка и обработка валидности дат
+        const parseDate = (dateString) => {
+            if (!dateString) return new Date();
+            const date = new Date(dateString);
+            return isNaN(date.getTime()) ? new Date() : date;
+        };
+        
+        role.createdAt = parseDate(json.createdAt);
+        role.updatedAt = parseDate(json.updatedAt);
         return role;
     }
 }
@@ -103,8 +111,16 @@ class Speaker extends Role {
     static fromJSON(json) {
         const speaker = new Speaker(json.name, json.wordsPerMinute);
         speaker.id = json.id;
-        speaker.createdAt = new Date(json.createdAt);
-        speaker.updatedAt = new Date(json.updatedAt);
+        
+        // Проверка и обработка валидности дат
+        const parseDate = (dateString) => {
+            if (!dateString) return new Date();
+            const date = new Date(dateString);
+            return isNaN(date.getTime()) ? new Date() : date;
+        };
+        
+        speaker.createdAt = parseDate(json.createdAt);
+        speaker.updatedAt = parseDate(json.updatedAt);
         speaker.color = json.color; // Восстанавливаем цвет спикера
         return speaker;
     }
@@ -157,8 +173,16 @@ class SoundEffect extends Role {
     static fromJSON(json) {
         const soundEffect = new SoundEffect(json.name, json.duration);
         soundEffect.id = json.id;
-        soundEffect.createdAt = new Date(json.createdAt);
-        soundEffect.updatedAt = new Date(json.updatedAt);
+        
+        // Проверка и обработка валидности дат
+        const parseDate = (dateString) => {
+            if (!dateString) return new Date();
+            const date = new Date(dateString);
+            return isNaN(date.getTime()) ? new Date() : date;
+        };
+        
+        soundEffect.createdAt = parseDate(json.createdAt);
+        soundEffect.updatedAt = parseDate(json.updatedAt);
         return soundEffect;
     }
 }

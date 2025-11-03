@@ -2,6 +2,7 @@
 import { DataService } from '../core/data-service.js';
 import { logger } from '../logger.js';
 import { ScriptData } from '../models/script-data.js';
+import { modalService } from '../ui/modal-service.js';
 import { featherIconsService } from '../utils/feather-icons.js';
 
 import { ScriptViewer } from './script-viewer.js';
@@ -338,9 +339,90 @@ class ViewerApp {
     }
 
     /**
+     * Загрузка скрипта из JSON файла
+     * @param {File} file - Файл для загрузки
+     * @returns {Promise<boolean>} Успешно ли загружено
+     */
+    async loadScriptFromJSON(file) {
+        try {
+            // Показываем уведомление о начале загрузки
+            const result = await modalService.show({
+                title: 'Загрузка скрипта',
+                type: 'info',
+                content: `Загружаем файл: ${file.name}`,
+                buttons: [
+                    {
+                        text: 'Отмена',
+                        icon: 'x-circle',
+                        type: 'secondary',
+                        onClick: () => false,
+                        autoClose: true
+                    }
+                ],
+                closable: false,
+                closeOnEscape: false
+            });
+
+            // Если пользователь отменил, возвращаем false
+            if (result === false) {
+                return false;
+            }
+
+            const scriptData = await this.dataService.loadFromJSONFile(file);
+            if (scriptData) {
+                const success = await this.loadScript(scriptData);
+                if (success) {
+                    this.logger.logUserAction('загрузка скрипта в режиме просмотра', {
+                        fileName: file.name,
+                        success: true,
+                        roleCount: scriptData.roles.length,
+                        replicaCount: scriptData.replicas.length
+                    });
+                    
+                    // Показываем уведомление об успешной загрузке
+                    modalService.showInfo('Успех', 'Скрипт успешно загружен и отображен!');
+                } else {
+                    this.logger.logUserAction('ошибка загрузки скрипта в режиме просмотра', {
+                        fileName: file.name,
+                        success: false
+                    });
+                    
+                    // Показываем уведомление об ошибке
+                    modalService.showInfo('Ошибка', 'Не удалось загрузить скрипт из файла.');
+                }
+                return success;
+            } else {
+                this.logger.logUserAction('ошибка загрузки скрипта в режиме просмотра', {
+                    fileName: file.name,
+                    success: false
+                });
+                
+                // Показываем уведомление об ошибке
+                modalService.showInfo('Ошибка', 'Не удалось загрузить скрипт из файла.');
+                return false;
+            }
+        } catch (error) {
+            this.logger.error('Ошибка при загрузке скрипта из JSON файла', {
+                error: error.message,
+                fileName: file.name
+            });
+            
+            // Показываем уведомление об ошибке
+            modalService.showInfo('Ошибка', `Ошибка при загрузке файла: ${error.message}`);
+            return false;
+        }
+    }
+
+    /**
      * Возврат к редактору
      */
     backToEditor() {
+        // Сохраняем текущие данные обратно в основное хранилище редактора
+        if (this.currentData) {
+            this.dataService.saveToStorage(this.currentData, 'podcastScriptData');
+            this.logger.info('Данные сохранены в основное хранилище перед возвратом к редактору');
+        }
+        
         if (window.history.length > 1) {
             window.history.back();
         } else {

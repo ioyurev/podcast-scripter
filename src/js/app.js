@@ -86,8 +86,13 @@ class PodcastScripterApp {
     saveDataToStorage() {
         try {
             const data = this.dataManager.exportData();
-            localStorage.setItem('podcastScriptData', JSON.stringify(data));
-            logger.debug('Данные сохранены в localStorage');
+            const scriptData = new ScriptData(data);
+            const success = this.dataService.saveToStorage(scriptData, 'podcastScriptData');
+            if (success) {
+                logger.debug('Данные сохранены в localStorage');
+            } else {
+                logger.error('Ошибка при сохранении данных в localStorage');
+            }
         } catch (error) {
             logger.error('Ошибка при сохранении данных в localStorage', {
                 error: error.message
@@ -249,6 +254,17 @@ window.addEventListener('beforeunload', () => {
     if (window.app && window.app.saveDataToStorage) {
         window.app.saveDataToStorage();
         logger.info('Данные сохранены перед закрытием страницы');
+    }
+});
+
+// Обработка события pageshow для перезагрузки данных при возврате со страницы кэша
+window.addEventListener('pageshow', (event) => {
+    if (event.persisted) {
+        // Страница загружена из кэша браузера
+        if (window.app && window.app.loadSavedData) {
+            window.app.loadSavedData();
+            logger.info('Данные перезагружены из кэша');
+        }
     }
 });
 

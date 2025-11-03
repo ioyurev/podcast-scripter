@@ -122,8 +122,16 @@ class ScriptData extends BaseModel {
     static fromJSON(json) {
         const scriptData = new ScriptData(json);
         scriptData.id = json.id;
-        scriptData.createdAt = new Date(json.createdAt);
-        scriptData.updatedAt = new Date(json.updatedAt);
+        
+        // Проверка и обработка валидности дат
+        const parseDate = (dateString) => {
+            if (!dateString) return new Date();
+            const date = new Date(dateString);
+            return isNaN(date.getTime()) ? new Date() : date;
+        };
+        
+        scriptData.createdAt = parseDate(json.createdAt);
+        scriptData.updatedAt = parseDate(json.updatedAt);
         return scriptData;
     }
 

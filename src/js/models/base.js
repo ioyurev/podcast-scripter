@@ -28,10 +28,16 @@ class BaseModel {
      * @returns {Object} JSON представление объекта
      */
     toJSON() {
+        // Проверка валидности дат перед сериализацией
+        const isValidDate = (date) => date instanceof Date && !isNaN(date.getTime());
+        
+        const createdAt = isValidDate(this.createdAt) ? this.createdAt.toISOString() : new Date().toISOString();
+        const updatedAt = isValidDate(this.updatedAt) ? this.updatedAt.toISOString() : new Date().toISOString();
+        
         return {
             id: this.id,
-            createdAt: this.createdAt.toISOString(),
-            updatedAt: this.updatedAt.toISOString()
+            createdAt: createdAt,
+            updatedAt: updatedAt
         };
     }
 
@@ -44,8 +50,16 @@ class BaseModel {
     static fromJSON(json, constructor) {
         const instance = new constructor();
         instance.id = json.id;
-        instance.createdAt = new Date(json.createdAt);
-        instance.updatedAt = new Date(json.updatedAt);
+        
+        // Проверка и обработка валидности дат при десериализации
+        const parseDate = (dateString) => {
+            if (!dateString) return new Date();
+            const date = new Date(dateString);
+            return isNaN(date.getTime()) ? new Date() : date;
+        };
+        
+        instance.createdAt = parseDate(json.createdAt);
+        instance.updatedAt = parseDate(json.updatedAt);
         return instance;
     }
 }

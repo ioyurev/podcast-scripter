@@ -1,5 +1,6 @@
 import { logger } from '../logger.js';
 import { ScriptData } from '../models/script-data.js';
+import { modalService } from '../ui/modal-service.js';
 
 /**
  * Core data service for unified script loading/saving functionality
@@ -103,6 +104,126 @@ class DataService {
                 error: error.message
             });
             return false;
+        }
+    }
+
+    /**
+     * Save script data to JSON file with modal feedback
+     * @param {ScriptData} scriptData - Script data to save
+     * @param {string} filename - Name for the file (without extension)
+     * @returns {Promise<boolean>} Success status
+     */
+    async saveToJSONFileWithFeedback(scriptData, filename) {
+        try {
+            if (!scriptData || !scriptData.validate()) {
+                this.logger.error('Попытка сохранить невалидные данные');
+                return false;
+            }
+
+            // Show progress modal
+            const result = await modalService.show({
+                title: 'Сохранение файла',
+                type: 'info',
+                content: `Подготовка файла: ${filename}.json`,
+                buttons: [
+                    {
+                        text: 'Отмена',
+                        icon: 'x-circle',
+                        type: 'secondary',
+                        onClick: () => false,
+                        autoClose: true
+                    }
+                ],
+                closable: false,
+                closeOnEscape: false
+            });
+
+            // If user cancelled, return false
+            if (result === false) {
+                return false;
+            }
+
+            const data = scriptData.toJSON();
+            const jsonString = JSON.stringify(data, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+
+            // Create download link
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${filename}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            this.logger.info('Данные успешно сохранены в JSON файл', {
+                filename: filename
+            });
+
+            // Show success notification
+            await modalService.showInfo('Успех', `Файл ${filename}.json успешно сохранен!`);
+
+            return true;
+        } catch (error) {
+            this.logger.error('Ошибка при сохранении JSON файла', {
+                error: error.message
+            });
+            return false;
+        }
+    }
+
+    /**
+     * Load script data from JSON file with modal feedback
+     * @param {File} file - JSON file to load
+     * @returns {Promise<ScriptData|null>} ScriptData object or null if failed
+     */
+    async loadFromJSONFileWithFeedback(file) {
+        try {
+            // Show progress modal
+            const result = await modalService.show({
+                title: 'Загрузка файла',
+                type: 'info',
+                content: `Загружаем файл: ${file.name}`,
+                buttons: [
+                    {
+                        text: 'Отмена',
+                        icon: 'x-circle',
+                        type: 'secondary',
+                        onClick: () => null,
+                        autoClose: true
+                    }
+                ],
+                closable: false,
+                closeOnEscape: false
+            });
+
+            // If user cancelled, return null
+            if (result === null) {
+                return null;
+            }
+
+            const scriptData = await this.loadFromJSONFile(file);
+            if (scriptData) {
+                this.logger.info('Данные успешно загружены из JSON файла', {
+                    fileName: file.name,
+                    fileSize: file.size,
+                    roleCount: scriptData.roles.length,
+                    replicaCount: scriptData.replicas.length
+                });
+                return scriptData;
+            } else {
+                this.logger.error('Не удалось загрузить данные из JSON файла', {
+                    fileName: file.name
+                });
+                return null;
+            }
+        } catch (error) {
+            this.logger.error('Ошибка при загрузке JSON файла', {
+                error: error.message,
+                fileName: file.name
+            });
+            return null;
         }
     }
 

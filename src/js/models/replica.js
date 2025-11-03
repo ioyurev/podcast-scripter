@@ -86,8 +86,16 @@ class Replica extends BaseModel {
     static fromJSON(json) {
         const replica = new Replica(json.text, json.roleId);
         replica.id = json.id;
-        replica.createdAt = new Date(json.createdAt);
-        replica.updatedAt = new Date(json.updatedAt);
+        
+        // Проверка и обработка валидности дат
+        const parseDate = (dateString) => {
+            if (!dateString) return new Date();
+            const date = new Date(dateString);
+            return isNaN(date.getTime()) ? new Date() : date;
+        };
+        
+        replica.createdAt = parseDate(json.createdAt);
+        replica.updatedAt = parseDate(json.updatedAt);
         replica.wordCount = json.wordCount || 0;
         return replica;
     }

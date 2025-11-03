@@ -5,6 +5,7 @@ import { Speaker, SoundEffect } from '../models/role.js';
 import { ScriptData } from '../models/script-data.js';
 import { featherIconsService } from '../utils/feather-icons.js';
 
+import { modalService } from './modal-service.js';
 import { SoundEffectElement } from './sound-effect-element.js';
 import { SpeakerReplicaElement } from './speaker-replica-element.js';
 
@@ -534,179 +535,59 @@ class UIComponents {
      * Показ модального окна для ввода имени файла
      * @param {Function} onConfirm - Функция для выполнения при подтверждении
      */
-    showFilenameDialog(onConfirm) {
-        // Создаем overlay
-        const overlay = document.createElement('div');
-        overlay.className = 'modal-overlay';
-        overlay.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-            animation: fadeIn 0.2s ease-in-out;
-        `;
+    async showFilenameDialog(onConfirm) {
+        try {
+            // Устанавливаем предустановленное имя файла
+            const defaultName = `podcast-script-${new Date().toISOString().slice(0, 10)}`;
+            
+            const result = await modalService.show({
+                title: 'Скачать файл',
+                type: 'input',
+                content: (container) => {
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.className = 'form-control';
+                    input.placeholder = 'Введите имя файла для скачивания (без расширения .json)';
+                    input.value = defaultName;
+                    input.focus();
+                    input.select();
+                    
+                    // Обработка Enter
+                    input.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            // Это будет обработано через кнопки
+                        }
+                    });
+                    
+                    container.appendChild(input);
+                    return input;
+                },
+                buttons: [
+                    {
+                        text: 'Отмена',
+                        icon: 'x-circle',
+                        type: 'secondary',
+                        onClick: () => null,
+                        autoClose: true
+                    },
+                    {
+                        text: 'Скачать',
+                        icon: 'download',
+                        type: 'primary',
+                        onClick: () => {
+                            const input = document.querySelector('.modal-body input');
+                            return input.value.trim() || null;
+                        },
+                        autoClose: true
+                    }
+                ]
+            });
 
-        // Создаем модальное окно
-        const modal = document.createElement('div');
-        modal.className = 'filename-dialog-modal';
-        modal.style.cssText = `
-            background: var(--color-white);
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: var(--shadow-lg);
-            max-width: 500px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-            animation: slideIn 0.2s ease-in-out;
-        `;
-
-        // Заголовок
-        const modalTitle = document.createElement('h3');
-        modalTitle.style.cssText = `
-            margin: 0 15px 0;
-            color: var(--color-text-primary);
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        `;
-        modalTitle.innerHTML = '📥 Скачать файл';
-
-        // Описание
-        const modalDescription = document.createElement('p');
-        modalDescription.style.cssText = `
-            margin: 10px 15px 15px;
-            color: var(--color-text-secondary);
-            font-size: 14px;
-            line-height: 1.4;
-        `;
-        modalDescription.textContent = 'Введите имя файла для скачивания (без расширения .json):';
-
-        // Поле ввода
-        const inputContainer = document.createElement('div');
-        inputContainer.style.cssText = `
-            margin: 0 15px 15px;
-        `;
-
-        const filenameInput = document.createElement('input');
-        filenameInput.type = 'text';
-        filenameInput.className = 'form-control';
-        filenameInput.style.cssText = `
-            width: 100%;
-            padding: 10px;
-            border: 2px solid var(--color-gray-border);
-            border-radius: 4px;
-            font-size: 14px;
-            font-family: Arial, sans-serif;
-            box-sizing: border-box;
-        `;
-        // Устанавливаем предустановленное имя файла
-        const defaultName = `podcast-script-${new Date().toISOString().slice(0, 10)}`;
-        filenameInput.value = defaultName;
-        filenameInput.focus();
-        filenameInput.select();
-
-        inputContainer.appendChild(filenameInput);
-
-        // Кнопки
-        const buttonContainer = document.createElement('div');
-        buttonContainer.style.cssText = `
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-            margin: 0 15px;
-        `;
-
-        const downloadBtn = document.createElement('button');
-        downloadBtn.innerHTML = '<i data-feather="download"></i> Скачать';
-        downloadBtn.className = 'btn btn-primary';
-        downloadBtn.style.cssText = `
-            cursor: pointer;
-            font-weight: 600;
-            transition: all var(--transition-fast);
-        `;
-        downloadBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            const filename = filenameInput.value.trim();
-            if (filename) {
-                onConfirm(filename);
-                document.body.removeChild(overlay);
-            } else {
-                alert('Пожалуйста, введите имя файла');
-            }
-        });
-
-        const cancelBtn = document.createElement('button');
-        cancelBtn.innerHTML = '<i data-feather="x-circle"></i> Отмена';
-        cancelBtn.className = 'btn btn-secondary';
-        cancelBtn.style.cssText = `
-            cursor: pointer;
-            font-weight: 600;
-            transition: all var(--transition-fast);
-        `;
-        cancelBtn.addEventListener('click', () => {
+            onConfirm(result);
+        } catch (error) {
+            logger.error('Ошибка при показе модального окна ввода имени файла:', error);
             onConfirm(null);
-            document.body.removeChild(overlay);
-        });
-
-        buttonContainer.appendChild(cancelBtn);
-        buttonContainer.appendChild(downloadBtn);
-
-        modal.appendChild(modalTitle);
-        modal.appendChild(modalDescription);
-        modal.appendChild(inputContainer);
-        modal.appendChild(buttonContainer);
-        overlay.appendChild(modal);
-        document.body.appendChild(overlay);
-
-        // Инициализация Feather Icons для новых элементов
-        featherIconsService.update();
-        
-        // Обработка Enter для сохранения
-        filenameInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                const filename = filenameInput.value.trim();
-                if (filename) {
-                    onConfirm(filename);
-                    document.body.removeChild(overlay);
-                } else {
-                    alert('Пожалуйста, введите имя файла');
-                }
-            } else if (e.key === 'Escape') {
-                onConfirm(null);
-                document.body.removeChild(overlay);
-            }
-        });
-
-        // Закрытие по Esc
-        const handleEsc = (e) => {
-            if (e.key === 'Escape') {
-                onConfirm(null);
-                document.body.removeChild(overlay);
-            }
-        };
-        document.addEventListener('keydown', handleEsc);
-
-        // Удаление обработчика при закрытии
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) {
-                onConfirm(null);
-                document.body.removeChild(overlay);
-            }
-        });
-
-        // Фокус на поле ввода
-        setTimeout(() => {
-            filenameInput.focus();
-        }, 100);
+        }
     }
 
     /**
@@ -714,7 +595,7 @@ class UIComponents {
      * @param {File} file - Файл для загрузки
      */
     async handleLoadScript(file) {
-        const scriptData = await this.dataService.loadFromJSONFile(file);
+        const scriptData = await this.dataService.loadFromJSONFileWithFeedback(file);
         if (scriptData) {
             // Import the loaded data into the data manager
             const success = this.dataManager.importData(scriptData);
@@ -726,14 +607,14 @@ class UIComponents {
                     success: true
                 });
             } else {
-                alert('Ошибка при загрузке скрипта');
+                modalService.showInfo('Ошибка', 'Ошибка при загрузке скрипта');
                 logger.logUserAction('ошибка загрузки скрипта', {
                     fileName: file.name,
                     success: false
                 });
             }
         } else {
-            alert('Ошибка при загрузке скрипта');
+            modalService.showInfo('Ошибка', 'Ошибка при загрузке скрипта');
             logger.logUserAction('ошибка загрузки скрипта', {
                 fileName: file.name,
                 success: false
@@ -1154,179 +1035,89 @@ class UIComponents {
      * @param {Replica} replica - Реплика для редактирования
      * @param {Function} onSave - Функция для вызова после сохранения
      */
-    showEditReplicaModal(replica, onSave) {
-        // Создаем overlay
-        const overlay = document.createElement('div');
-        overlay.className = 'modal-overlay';
-        overlay.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-            animation: fadeIn 0.2s ease-in-out;
-        `;
+    async showEditReplicaModal(replica, onSave) {
+        try {
+            const role = this.dataManager.roleManager.findById(replica.roleId);
+            const roleName = role ? role.name : 'Без роли';
+            
+            const result = await modalService.show({
+                title: 'Редактирование реплики',
+                type: 'custom',
+                size: 'lg',
+                content: (container) => {
+                    // Информация о роли
+                    const roleInfo = document.createElement('div');
+                    roleInfo.style.cssText = `
+                        background: var(--color-gray-light);
+                        padding: 10px;
+                        border-radius: 4px;
+                        font-size: 14px;
+                        color: var(--color-text-secondary);
+                        margin-bottom: 15px;
+                    `;
+                    roleInfo.textContent = `Роль: ${roleName}`;
+                    container.appendChild(roleInfo);
 
-        // Создаем модальное окно
-        const modal = document.createElement('div');
-        modal.className = 'edit-replica-modal';
-        modal.style.cssText = `
-            background: var(--color-white);
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: var(--shadow-lg);
-            max-width: 600px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-            animation: slideIn 0.2s ease-in-out;
-        `;
+                    // Текстовое поле
+                    const textArea = document.createElement('textarea');
+                    textArea.value = replica.text;
+                    textArea.className = 'form-control';
+                    textArea.style.cssText += `
+                        min-height: 120px;
+                        resize: vertical;
+                        font-family: Arial, sans-serif;
+                    `;
+                    textArea.placeholder = 'Введите текст реплики...';
+                    textArea.focus();
+                    textArea.select();
 
-        // Заголовок
-        const modalTitle = document.createElement('h3');
-        modalTitle.style.cssText = `
-            margin: 0 15px 0;
-            color: var(--color-text-primary);
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        `;
-        modalTitle.innerHTML = '✏️ Редактирование реплики';
+                    // Обработка Enter для сохранения (с Ctrl+Enter)
+                    textArea.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter' && e.ctrlKey) {
+                            e.preventDefault();
+                            // Это будет обработано через кнопки
+                        }
+                    });
 
-        // Форма редактирования
-        const form = document.createElement('form');
-        form.style.cssText = `
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        `;
+                    container.appendChild(textArea);
+                    return textArea;
+                },
+                buttons: [
+                    {
+                        text: 'Отмена',
+                        icon: 'x-circle',
+                        type: 'secondary',
+                        onClick: () => false,
+                        autoClose: true
+                    },
+                    {
+                        text: 'Сохранить',
+                        icon: 'save',
+                        type: 'primary',
+                        onClick: () => {
+                            const textArea = document.querySelector('.modal-body textarea');
+                            const newText = textArea.value.trim();
+                            if (newText) {
+                                replica.setText(newText);
+                                onSave();
+                                return true;
+                            } else {
+                                alert('Текст реплики не может быть пустым');
+                                return false;
+                            }
+                        },
+                        autoClose: true
+                    }
+                ]
+            });
 
-        // Информация о роли
-        const roleInfo = document.createElement('div');
-        roleInfo.style.cssText = `
-            background: var(--color-gray-light);
-            padding: 10px;
-            border-radius: 4px;
-            font-size: 14px;
-            color: var(--color-text-secondary);
-        `;
-        const role = this.dataManager.roleManager.findById(replica.roleId);
-        roleInfo.textContent = `Роль: ${role ? role.name : 'Без роли'}`;
-
-        // Текстовое поле
-        const textArea = document.createElement('textarea');
-        textArea.value = replica.text;
-        textArea.style.cssText = `
-            width: 100%;
-            min-height: 120px;
-            padding: 10px;
-            border: 2px solid var(--color-gray-border);
-            border-radius: 4px;
-            font-family: Arial, sans-serif;
-            font-size: 14px;
-            resize: vertical;
-        `;
-        textArea.placeholder = 'Введите текст реплики...';
-        textArea.focus();
-        textArea.select();
-
-        // Кнопки
-        const buttonContainer = document.createElement('div');
-        buttonContainer.style.cssText = `
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-        `;
-
-        const saveBtn = document.createElement('button');
-        saveBtn.innerHTML = '<i data-feather="save"></i> Сохранить';
-        saveBtn.className = 'btn btn-primary';
-        saveBtn.style.cssText = `
-            cursor: pointer;
-            font-weight: 600;
-            transition: all var(--transition-fast);
-        `;
-        saveBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            const newText = textArea.value.trim();
-            if (newText) {
-                replica.setText(newText);
-                onSave();
-                document.body.removeChild(overlay);
-            } else {
-                alert('Текст реплики не может быть пустым');
+            // Если результат false, ничего не делаем (отмена)
+            if (result === false) {
+                return;
             }
-        });
-
-        const cancelBtn = document.createElement('button');
-        cancelBtn.innerHTML = '<i data-feather="x-circle"></i> Отмена';
-        cancelBtn.className = 'btn btn-secondary';
-        cancelBtn.style.cssText = `
-            cursor: pointer;
-            font-weight: 600;
-            transition: all var(--transition-fast);
-        `;
-        cancelBtn.addEventListener('click', () => {
-            document.body.removeChild(overlay);
-        });
-
-        // Обработка Enter для сохранения (с Ctrl+Enter)
-        textArea.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && e.ctrlKey) {
-                e.preventDefault();
-                const newText = textArea.value.trim();
-                if (newText) {
-                    replica.setText(newText);
-                    onSave();
-                    document.body.removeChild(overlay);
-                } else {
-                    alert('Текст реплики не может быть пустым');
-                }
-            } else if (e.key === 'Escape') {
-                document.body.removeChild(overlay);
-            }
-        });
-
-        buttonContainer.appendChild(cancelBtn);
-        buttonContainer.appendChild(saveBtn);
-
-        form.appendChild(roleInfo);
-        form.appendChild(textArea);
-        form.appendChild(buttonContainer);
-
-        modal.appendChild(modalTitle);
-        modal.appendChild(form);
-        overlay.appendChild(modal);
-        document.body.appendChild(overlay);
-
-        // Инициализация Feather Icons для новых элементов
-        if (typeof feather !== 'undefined') {
-            feather.replace();
+        } catch (error) {
+            logger.error('Ошибка при показе модального окна редактирования реплики:', error);
         }
-
-        // Фокус на текстовое поле
-        textArea.focus();
-
-        // Закрытие по Esc
-        const handleEsc = (e) => {
-            if (e.key === 'Escape') {
-                document.body.removeChild(overlay);
-            }
-        };
-        document.addEventListener('keydown', handleEsc);
-
-        // Удаление обработчика при закрытии
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) {
-                document.body.removeChild(overlay);
-            }
-        });
     }
 
     /**
@@ -1527,128 +1318,44 @@ class UIComponents {
      * @param {Function} onConfirm - Функция для выполнения при подтверждении
      * @param {Function} onCancel - Функция для выполнения при отмене
      */
-    showDeleteConfirmationModal(title, message, onConfirm, onCancel = null) {
-        // Создаем overlay
-        const overlay = document.createElement('div');
-        overlay.className = 'modal-overlay';
-        overlay.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-            animation: fadeIn 0.2s ease-in-out;
-        `;
+    async showDeleteConfirmationModal(title, message, onConfirm, onCancel = null) {
+        try {
+            const result = await modalService.show({
+                title: title,
+                type: 'confirmation',
+                content: message,
+                buttons: [
+                    {
+                        text: 'Отмена',
+                        icon: 'x-circle',
+                        type: 'secondary',
+                        onClick: () => {
+                            if (onCancel) onCancel();
+                            return false;
+                        },
+                        autoClose: true
+                    },
+                    {
+                        text: 'Удалить',
+                        icon: 'trash-2',
+                        type: 'danger',
+                        onClick: () => {
+                            onConfirm();
+                            return true;
+                        },
+                        autoClose: true
+                    }
+                ]
+            });
 
-        // Создаем модальное окно
-        const modal = document.createElement('div');
-        modal.className = 'delete-confirmation-modal';
-        modal.style.cssText = `
-            background: var(--color-white);
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: var(--shadow-lg);
-            max-width: 500px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-            animation: slideIn 0.2s ease-in-out;
-        `;
-
-        // Заголовок
-        const modalTitle = document.createElement('h3');
-        modalTitle.style.cssText = `
-            margin: 0 15px 0;
-            color: var(--color-text-primary);
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        `;
-        modalTitle.innerHTML = `⚠️ ${title}`;
-
-        // Сообщение
-        const modalMessage = document.createElement('p');
-        modalMessage.style.cssText = `
-            margin: 0 0 20px 0;
-            color: var(--color-text-secondary);
-            line-height: 1.5;
-            font-size: 14px;
-        `;
-        modalMessage.textContent = message;
-
-        // Кнопки
-        const buttonContainer = document.createElement('div');
-        buttonContainer.style.cssText = `
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-        `;
-
-        const confirmBtn = document.createElement('button');
-        confirmBtn.innerHTML = '<i data-feather="trash-2"></i> Удалить';
-        confirmBtn.className = 'btn btn-danger';
-        confirmBtn.style.cssText = `
-            cursor: pointer;
-            font-weight: 600;
-            transition: all var(--transition-fast);
-        `;
-        confirmBtn.addEventListener('click', () => {
-            onConfirm();
-            document.body.removeChild(overlay);
-        });
-
-        const cancelBtn = document.createElement('button');
-        cancelBtn.innerHTML = '<i data-feather="x-circle"></i> Отмена';
-        cancelBtn.className = 'btn btn-secondary';
-        cancelBtn.style.cssText = `
-            cursor: pointer;
-            font-weight: 600;
-            transition: all var(--transition-fast);
-        `;
-        cancelBtn.addEventListener('click', () => {
+            // Если результат false, ничего не делаем (отмена)
+            if (result === false) {
+                return;
+            }
+        } catch (error) {
+            logger.error('Ошибка при показе модального окна подтверждения удаления:', error);
             if (onCancel) onCancel();
-            document.body.removeChild(overlay);
-        });
-
-        buttonContainer.appendChild(cancelBtn);
-        buttonContainer.appendChild(confirmBtn);
-
-        modal.appendChild(modalTitle);
-        modal.appendChild(modalMessage);
-        modal.appendChild(buttonContainer);
-        overlay.appendChild(modal);
-        document.body.appendChild(overlay);
-
-        // Инициализация Feather Icons для новых элементов
-        if (typeof feather !== 'undefined') {
-            feather.replace();
         }
-
-        // Фокус на отмену по умолчанию
-        cancelBtn.focus();
-
-        // Закрытие по Esc
-        const handleEsc = (e) => {
-            if (e.key === 'Escape') {
-                if (onCancel) onCancel();
-                document.body.removeChild(overlay);
-            }
-        };
-        document.addEventListener('keydown', handleEsc);
-
-        // Удаление обработчика при закрытии
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) {
-                if (onCancel) onCancel();
-                document.body.removeChild(overlay);
-            }
-        });
     }
 
     /**
