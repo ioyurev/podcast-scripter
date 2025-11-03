@@ -1,4 +1,5 @@
 import { logger } from '../logger.js';
+import { featherIconsService } from '../utils/feather-icons.js';
 
 /**
  * Компоненты пользовательского интерфейса для режима просмотра
@@ -19,6 +20,8 @@ class ViewerUIComponents {
         this.setupEventListeners();
         this.updateControls();
         this.logger.info('UI компоненты режима просмотра инициализированы');
+        // Инициализация Feather Icons
+        featherIconsService.update();
     }
 
     /**

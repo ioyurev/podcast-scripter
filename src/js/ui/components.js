@@ -1,9 +1,9 @@
-import feather from 'feather-icons';
 
 import { logger } from '../logger.js';
 import { Replica } from '../models/replica.js';
 import { Speaker, SoundEffect } from '../models/role.js';
 import { ScriptData } from '../models/script-data.js';
+import { featherIconsService } from '../utils/feather-icons.js';
 
 import { SoundEffectElement } from './sound-effect-element.js';
 import { SpeakerReplicaElement } from './speaker-replica-element.js';
@@ -33,9 +33,8 @@ class UIComponents {
         this.updateStatistics();
         
         // Инициализация Feather Icons
-        if (typeof feather !== 'undefined') {
-            feather.replace();
-        }
+        featherIconsService.setLogger(logger);
+        featherIconsService.initialize();
         
         logger.info('Компоненты UI инициализированы и обновлены');
     }
@@ -668,10 +667,8 @@ class UIComponents {
         document.body.appendChild(overlay);
 
         // Инициализация Feather Icons для новых элементов
-        if (typeof feather !== 'undefined') {
-            feather.replace();
-        }
-
+        featherIconsService.update();
+        
         // Обработка Enter для сохранения
         filenameInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
@@ -761,9 +758,7 @@ class UIComponents {
         this.updateRoleSelect();
         
         // Инициализация Feather Icons для новых элементов
-        if (typeof feather !== 'undefined') {
-            feather.replace();
-        }
+        featherIconsService.update();
         
         logger.debug('Список ролей обновлен', { roleCount: roles.length });
     }

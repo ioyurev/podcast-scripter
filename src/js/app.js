@@ -1,4 +1,3 @@
-import feather from 'feather-icons';
 
 // Импорты всех необходимых классов
 import { DataService } from './core/data-service.js';
@@ -6,6 +5,7 @@ import { logger } from './logger.js';
 import { Speaker, SoundEffect} from './models/role.js';
 import { DataManager } from './services/data-manager.js';
 import { UIComponents } from './ui/components.js';
+import { featherIconsService } from './utils/feather-icons.js';
 
 /**
  * Основная логика приложения
@@ -212,9 +212,12 @@ class PodcastScripterApp {
      */
     initFeatherIcons() {
         if (!this.featherInitialized) {
-            feather.replace();
-            this.featherInitialized = true;
-            logger.info('Feather Icons инициализированы');
+            featherIconsService.setLogger(logger);
+            const success = featherIconsService.initialize();
+            this.featherInitialized = success;
+            if (success) {
+                logger.info('Feather Icons инициализированы');
+            }
         }
     }
 
@@ -222,7 +225,7 @@ class PodcastScripterApp {
      * Обновление Feather Icons
      */
     updateFeatherIcons() {
-        feather.replace();
+        featherIconsService.update();
     }
 }
 

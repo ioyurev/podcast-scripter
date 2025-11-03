@@ -1,6 +1,8 @@
+
 import { DataService } from '../core/data-service.js';
 import { logger } from '../logger.js';
 import { ScriptData } from '../models/script-data.js';
+import { featherIconsService } from '../utils/feather-icons.js';
 
 import { ScriptViewer } from './script-viewer.js';
 import { StorageManager } from './storage-manager.js';
@@ -167,39 +169,15 @@ class ViewerApp {
     }
 
     /**
-     * Загрузка скрипта из JSON файла
-     * @param {File} file - JSON файл
-     * @returns {Promise<boolean>} Успешно ли загружено
-     */
-    async loadScriptFromJSON(file) {
-        try {
-            const scriptData = await this.dataService.loadFromJSONFile(file);
-            if (scriptData) {
-                return await this.loadScript(scriptData);
-            }
-            return false;
-        } catch (error) {
-            this.logger.error('Ошибка при загрузке скрипта из JSON файла', {
-                error: error.message
-            });
-            return false;
-        }
-    }
-
-    /**
      * Инициализация Feather Icons
      */
     initFeatherIcons() {
-        if (typeof feather !== 'undefined') {
-            feather.replace();
-        } else {
-            // Если Feather Icons не загружен, пытаемся динамически импортировать
-            import('feather-icons').then((featherIcons) => {
-                if (featherIcons && featherIcons.default) {
-                    featherIcons.default.replace();
-                }
-            }).catch(() => {
-                // Если не удалось загрузить Feather Icons, продолжаем без иконок
+        featherIconsService.setLogger(this.logger);
+        const success = featherIconsService.initialize();
+        if (!success) {
+            // Если основная инициализация не удалась, пробуем асинхронную
+            featherIconsService.initializeAsync().catch(() => {
+                // Если все равно не удалось, продолжаем без иконок
                 this.logger.warn('Feather Icons не доступен');
             });
         }
