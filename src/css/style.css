@@ -2008,10 +2008,11 @@ body {
     box-shadow: var(--shadow-lg);
     z-index: 10001;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 12px;
     animation: slideIn 0.3s ease-out;
     max-width: 400px;
+    min-width: 300px;
 }
 
 .toast.warning {
@@ -2034,11 +2035,17 @@ body {
     font-size: 14px;
     color: var(--color-text-primary);
     line-height: 1.4;
+    min-width: 0; /* Позволяет элементу сжиматься */
+    word-wrap: break-word;
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 .toast-actions {
     display: flex;
     gap: 8px;
+    flex-shrink: 0; /* Предотвращает сжатие кнопок */
+    align-self: flex-start;
 }
 
 /* Стили для кнопок toast (когда используются без классов btn) */
@@ -2055,6 +2062,7 @@ body {
     align-items: center;
     justify-content: center;
     gap: 6px;
+    flex-shrink: 0; /* Предотвращает сжатие кнопок */
 }
 
 .toast-btn.undo {
@@ -2072,6 +2080,10 @@ body {
     background: var(--color-gray-light);
     color: var(--color-text-primary);
     border-color: var(--color-gray);
+    padding: 4px 8px !important; /* Уменьшаем размер кнопки закрытия */
+    min-width: auto;
+    width: auto;
+    height: auto;
 }
 
 .toast-btn.close:hover {
