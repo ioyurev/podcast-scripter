@@ -22,155 +22,34 @@ class ViewerUIComponents {
     }
 
     /**
+     * Загрузка предпочтений темы из localStorage
+     */
+    loadThemePreference() {
+        const savedTheme = localStorage.getItem('viewerTheme');
+        if (savedTheme) {
+            this.viewerApp.setTheme(savedTheme);
+            this.updateThemeButtonIcon(savedTheme);
+        } else {
+            // Если нет сохраненной темы, используем системную предпочтительную тему
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const theme = systemPrefersDark ? 'dark' : 'light';
+            this.viewerApp.setTheme(theme);
+            this.updateThemeButtonIcon(theme);
+        }
+    }
+
+    /**
      * Создание элементов управления
      */
     createControls() {
-        // Контейнер для элементов управления
-        const controlsContainer = document.createElement('div');
-        controlsContainer.className = 'viewer-controls-container';
-        document.body.insertBefore(controlsContainer, document.body.firstChild);
-
-        // Создание панели управления
-        const controlsPanel = document.createElement('div');
-        controlsPanel.className = 'viewer-controls-panel';
-        controlsPanel.innerHTML = `
-            <div class="viewer-controls-left">
-                <button id="viewerBackBtn" class="btn btn-secondary" title="Вернуться к редактированию">
-                    <i data-feather="arrow-left"></i> Редактировать
-                </button>
-                <button id="viewerLoadJsonBtn" class="btn btn-primary" title="Открыть файл">
-                    <i data-feather="upload"></i> Открыть файл
-                </button>
-                <input type="file" id="viewerJsonFileInput" accept=".json" style="display: none;">
-            </div>
-            <div class="stats-grid" id="viewerStatsContainer">
-                <!-- Статистика будет обновляться динамически -->
-            </div>
-            <div class="viewer-controls-right">
-                <button id="viewerPrintBtn" class="btn btn-outline-secondary" title="Печать">
-                    <i data-feather="printer"></i> Печать
-                </button>
-                <button id="viewerCopyBtn" class="btn btn-outline-secondary" title="Копировать текст">
-                    <i data-feather="copy"></i> Копировать
-                </button>
-                <button id="viewerThemeToggleBtn" class="btn btn-outline-secondary theme-toggle-btn" title="Темная тема">
-                    <span class="theme-icon">🌙</span>
-                </button>
-            </div>
-        `;
-        controlsContainer.appendChild(controlsPanel);
-
-        // Сохранение ссылок на элементы
-        this.elements.controlsContainer = controlsContainer;
-        this.elements.controlsPanel = controlsPanel;
+        // Ссылки на существующие статические элементы
         this.elements.backBtn = document.getElementById('viewerBackBtn');
         this.elements.loadJsonBtn = document.getElementById('viewerLoadJsonBtn');
         this.elements.jsonFileInput = document.getElementById('viewerJsonFileInput');
         this.elements.printBtn = document.getElementById('viewerPrintBtn');
-        this.elements.copyBtn = document.getElementById('viewerCopyBtn');
+        this.elements.themeToggleBtn = document.getElementById('viewerThemeToggleBtn');
+        this.elements.statsContainer = document.getElementById('viewerStatsContainer');
     }
-
-    /**
-     * Настройка обработчиков событий
-     */
-    setupEventListeners() {
-        // Кнопка возврата к редактированию
-        if (this.elements.backBtn) {
-            this.elements.backBtn.addEventListener('click', () => {
-                this.handleBackToEditor();
-            });
-        }
-
-        // Кнопка загрузки JSON - теперь напрямую открывает файл
-        if (this.elements.loadJsonBtn) {
-            this.elements.loadJsonBtn.addEventListener('click', () => {
-                document.getElementById('viewerJsonFileInput').click();
-            });
-        }
-
-        // Кнопка печати
-        if (this.elements.printBtn) {
-            this.elements.printBtn.addEventListener('click', () => {
-                this.handlePrint();
-            });
-        }
-
-        // Кнопка копирования
-        if (this.elements.copyBtn) {
-            this.elements.copyBtn.addEventListener('click', () => {
-                this.handleCopyScript();
-            });
-        }
-
-        // Обработчик для основного файла JSON
-        if (this.elements.jsonFileInput) {
-            this.elements.jsonFileInput.addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    this.handleJsonFileLoad(file);
-                }
-                e.target.value = ''; // Сброс файла
-            });
-        }
-
-        // Обработчик клавиатуры
-        document.addEventListener('keydown', (e) => {
-            if (e.ctrlKey && e.key === 'p') {
-                e.preventDefault();
-                this.handlePrint();
-            } else if (e.ctrlKey && e.key === 's') {
-                e.preventDefault();
-                this.handleCopyScript();
-            }
-        });
-
-        // Кнопка переключения темы
-        const themeToggleBtn = document.getElementById('viewerThemeToggleBtn');
-        if (themeToggleBtn) {
-            themeToggleBtn.addEventListener('click', () => {
-                this.viewerApp.toggleTheme();
-                this.updateThemeButtonIcon(this.viewerApp.getCurrentTheme());
-            });
-        } else {
-            this.logger.error('Элемент viewerThemeToggleBtn не найден в DOM');
-        }
-    }
-
-    /**
-     * Обработка возврата к редактору
-     */
-    handleBackToEditor() {
-        // Возвращаемся к редактору через историю или перенаправляем на главную страницу
-        if (window.history.length > 1) {
-            window.history.back();
-        } else {
-            window.location.href = 'index.html';
-        }
-    }
-
-    /**
-     * Обработка загрузки JSON файла
-     * @param {File} file - JSON файл
-     */
-    async handleJsonFileLoad(file) {
-        try {
-            const scriptData = await this.viewerApp.dataService.loadFromJSONFile(file);
-            if (scriptData) {
-                this.viewerApp.loadScript(scriptData);
-                this.logger.info('JSON файл успешно загружен', {
-                    fileName: file.name
-                });
-            } else {
-                this.showNotification('Ошибка при загрузке файла', 'error');
-            }
-        } catch (error) {
-            this.logger.error('Ошибка при загрузке JSON файла', {
-                error: error.message
-            });
-            this.showNotification('Ошибка при загрузке файла', 'error');
-        }
-    }
-
 
     /**
      * Обработка печати
@@ -180,94 +59,15 @@ class ViewerUIComponents {
     }
 
     /**
-     * Обработка копирования скрипта
-     */
-    async handleCopyScript() {
-        try {
-            const scriptText = this.extractScriptText();
-            await navigator.clipboard.writeText(scriptText);
-            this.showNotification('Скрипт скопирован в буфер обмена', 'success');
-            this.logger.info('Скрипт скопирован в буфер обмена');
-        } catch (error) {
-            this.logger.error('Ошибка при копировании скрипта', {
-                error: error.message
-            });
-            // Резервный метод для старых браузеров
-            this.fallbackCopyScript();
-        }
-    }
-
-    /**
-     * Извлечение текста скрипта для копирования
-     * @returns {string} Текст скрипта
-     */
-    extractScriptText() {
-        if (!this.viewerApp.currentData) return '';
-
-        const replicasWithRoleInfo = this.viewerApp.currentData.getReplicasWithRoleInfo();
-        let scriptText = 'СКРИПТ ПОДКАСТА\n\n';
-
-        // Добавляем статистику
-        const stats = this.viewerApp.currentData.statistics;
-        scriptText += `Всего слов: ${stats.totalWords}\n`;
-        scriptText += `Общая длительность: ${stats.totalDurationFormatted}\n`;
-        scriptText += `Ролей: ${stats.roleCount}\n`;
-        scriptText += `Реплик: ${stats.replicaCount}\n\n`;
-
-        // Добавляем реплики
-        replicasWithRoleInfo.forEach((replica, index) => {
-            const role = replica.role;
-            const roleName = role ? role.name : 'Без роли';
-            const roleType = role ? (role.type === 'speaker' ? 'Спикер' : 'Звук') : '';
-            const prefix = roleType ? `${roleName} (${roleType})` : roleName;
-            scriptText += `${index + 1}. ${prefix}: ${replica.text}\n`;
-        });
-
-        return scriptText;
-    }
-
-    /**
-     * Резервный метод копирования для старых браузеров
-     */
-    fallbackCopyScript() {
-        const textArea = document.createElement('textarea');
-        textArea.value = this.extractScriptText();
-        textArea.style.position = 'fixed';
-        textArea.style.left = '-99999px';
-        textArea.style.top = '-999999px';
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-
-        try {
-            const successful = document.execCommand('copy');
-            if (successful) {
-                this.showNotification('Скрипт скопирован в буфер обмена', 'success');
-            } else {
-                this.showNotification('Не удалось скопировать скрипт', 'error');
-            }
-        } catch {
-            this.showNotification('Не удалось скопировать скрипт', 'error');
-        }
-
-        document.body.removeChild(textArea);
-    }
-
-    /**
      * Обновление состояния элементов управления
      */
     updateControls() {
         // Обновляем состояние кнопок в зависимости от наличия данных
         const hasData = this.viewerApp.currentData !== null;
         const canPrint = hasData;
-        const canCopy = hasData;
 
         if (this.elements.printBtn) {
             this.elements.printBtn.disabled = !canPrint;
-        }
-
-        if (this.elements.copyBtn) {
-            this.elements.copyBtn.disabled = !canCopy;
         }
 
         // Обновляем статистику если есть данные
@@ -281,31 +81,41 @@ class ViewerUIComponents {
      * @param {Object} statistics - Объект статистики
      */
     updateStatistics(statistics) {
-        const statsContainer = document.getElementById('viewerStatsContainer');
-        if (!statsContainer || !statistics) {
+        if (!statistics) {
             return;
         }
 
-        const statsHTML = `
-            <div class="stat-item">
-                <span class="stat-label">Слова</span>
-                <span class="stat-value">${statistics.totalWords}</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">Длительность</span>
-                <span class="stat-value">${statistics.totalDurationFormatted}</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">Роли</span>
-                <span class="stat-value">${statistics.roleCount}</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">Реплики</span>
-                <span class="stat-value">${statistics.replicaCount}</span>
-            </div>
-        `;
+        // Обновляем статистику в существующих элементах
+        const totalWordsElement = document.getElementById('totalWords');
+        const totalDurationElement = document.getElementById('totalDuration');
+        const roleCountElement = document.getElementById('roleCount');
+        const replicaCountElement = document.getElementById('replicaCount');
 
-        statsContainer.innerHTML = statsHTML;
+        if (totalWordsElement) {
+            totalWordsElement.textContent = statistics.totalWords;
+        }
+        if (totalDurationElement) {
+            totalDurationElement.textContent = statistics.totalDurationFormatted;
+        }
+        if (roleCountElement) {
+            roleCountElement.textContent = statistics.roleCount;
+        }
+        if (replicaCountElement) {
+            replicaCountElement.textContent = statistics.replicaCount;
+        }
+    }
+
+    /**
+     * Обновление заголовка страницы
+     * @param {ScriptData} scriptData - Данные скрипта
+     */
+    updatePageTitle(scriptData) {
+        if (scriptData && scriptData.roles && scriptData.replicas) {
+            const title = `Просмотр скрипта подкаста - ${scriptData.roles.length} ролей, ${scriptData.replicas.length} реплик`;
+            document.title = title;
+        } else {
+            document.title = 'Просмотр скрипта подкаста';
+        }
     }
 
     /**
@@ -387,59 +197,58 @@ class ViewerUIComponents {
     }
 
     /**
-     * Загрузка предпочтений темы из localStorage
+     * Настройка обработчиков событий
      */
-    loadThemePreference() {
-        const savedTheme = localStorage.getItem('viewerTheme');
-        if (savedTheme) {
-            this.viewerApp.setTheme(savedTheme);
-            this.updateThemeButtonIcon(savedTheme);
-        } else {
-            // Если нет сохраненной темы, используем системную предпочтительную тему
-            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            const theme = systemPrefersDark ? 'dark' : 'light';
-            this.viewerApp.setTheme(theme);
-            this.updateThemeButtonIcon(theme);
-        }
-    }
-
-    /**
-     * Адаптивность для мобильных устройств
-     */
-    setupMobileAdaptability() {
-        const isMobile = window.innerWidth < 768;
-        if (isMobile) {
-            this.elements.controlsPanel.classList.add('mobile');
+    setupEventListeners() {
+        // Кнопка возврата к редактированию
+        if (this.elements.backBtn) {
+            this.elements.backBtn.addEventListener('click', () => {
+                this.viewerApp.backToEditor();
+            });
         }
 
-        window.addEventListener('resize', () => {
-            const isNowMobile = window.innerWidth < 768;
-            if (isNowMobile) {
-                this.elements.controlsPanel.classList.add('mobile');
-            } else {
-                this.elements.controlsPanel.classList.remove('mobile');
+        // Кнопка загрузки JSON - теперь напрямую открывает файл
+        if (this.elements.loadJsonBtn) {
+            this.elements.loadJsonBtn.addEventListener('click', () => {
+                document.getElementById('viewerJsonFileInput').click();
+            });
+        }
+
+        // Кнопка печати
+        if (this.elements.printBtn) {
+            this.elements.printBtn.addEventListener('click', () => {
+                this.handlePrint();
+            });
+        }
+
+        // Обработчик для основного файла JSON
+        if (this.elements.jsonFileInput) {
+            this.elements.jsonFileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    this.viewerApp.loadScriptFromJSON(file);
+                }
+                e.target.value = ''; // Сброс файла
+            });
+        }
+
+        // Обработчик клавиатуры
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'p') {
+                e.preventDefault();
+                this.handlePrint();
             }
         });
-    }
 
-    /**
-     * Установка заголовка страницы
-     * @param {string} title - Заголовок
-     */
-    setPageTitle(title) {
-        document.title = title || 'Просмотр скрипта подкаста';
-    }
-
-    /**
-     * Обновление информации о скрипте в заголовке
-     * @param {ScriptData} scriptData - Данные скрипта
-     */
-    updatePageTitle(scriptData) {
-        if (scriptData && scriptData.validate()) {
-            const roleName = scriptData.roles[0] ? scriptData.roles[0].name : 'Скрипт';
-            document.title = `Просмотр: ${roleName} - ${scriptData.replicas.length} реплик`;
+        // Кнопка переключения темы
+        const themeToggleBtn = document.getElementById('viewerThemeToggleBtn');
+        if (themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', () => {
+                this.viewerApp.toggleTheme();
+                this.updateThemeButtonIcon(this.viewerApp.getCurrentTheme());
+            });
         } else {
-            document.title = 'Просмотр скрипта подкаста';
+            this.logger.error('Элемент viewerThemeToggleBtn не найден в DOM');
         }
     }
 }

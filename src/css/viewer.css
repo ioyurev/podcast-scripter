@@ -1,46 +1,5 @@
 /* Стили для режима просмотра скрипта */
 
-/* Контейнер для элементов управления */
-.viewer-controls-container {
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    background: var(--color-white);
-    border-bottom: 2px solid var(--color-gray-border-light);
-    padding: 10px 20px;
-    box-shadow: var(--shadow-md);
-}
-
-.viewer-controls-panel {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    max-width: 1200px;
-    margin: 0 auto;
-}
-
-.viewer-controls-left,
-.viewer-controls-right {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
-
-/* Адаптивность для мобильных устройств */
-@media (max-width: 768px) {
-    .viewer-controls-panel.mobile {
-        flex-direction: column;
-        gap: 10px;
-        align-items: stretch;
-    }
-    
-    .viewer-controls-left,
-    .viewer-controls-right {
-        justify-content: center;
-        flex-wrap: wrap;
-    }
-}
-
 /* Контейнер скрипта */
 .viewer-script-container {
     max-width: 1200px;
@@ -50,51 +9,6 @@
     border-radius: 8px;
     box-shadow: var(--shadow-md);
     min-height: calc(100vh - 200px);
-}
-
-/* Статистика в панели управления */
-.viewer-controls-panel .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 15px;
-    margin: 0 20px;
-    min-width: 400px;
-    flex: 1;
-    max-width: 600px;
-}
-
-/* Для мобильных устройств - 2 колонки */
-@media (max-width: 768px) {
-    .viewer-controls-panel .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-        min-width: 200px;
-        gap: 10px;
-    }
-}
-
-.viewer-controls-panel .stat-item {
-    text-align: center;
-    padding: 8px 12px;
-    background: var(--color-gray-lighter);
-    border-radius: 6px;
-    border: 1px solid var(--color-gray-border-light);
-}
-
-.viewer-controls-panel .stat-label {
-    display: block;
-    color: var(--color-text-secondary);
-    font-size: 0.8em;
-    margin-bottom: 2px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.viewer-controls-panel .stat-value {
-    display: block;
-    font-size: 1.1em;
-    font-weight: bold;
-    color: var(--color-text-primary);
 }
 
 /* Старый стиль статистики - скрываем, так как теперь она в панели управления */

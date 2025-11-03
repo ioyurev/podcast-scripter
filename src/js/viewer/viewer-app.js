@@ -31,7 +31,7 @@ class ViewerApp {
 
             // Инициализация компонентов
             this.scriptViewer = new ScriptViewer(
-                document.getElementById('viewer-script-container'),
+                document.getElementById('viewerScriptContainer'),
                 { showStats: true, showColors: true, showRoleInfo: true }
             );
 
@@ -61,18 +61,19 @@ class ViewerApp {
     }
 
     /**
-     * Создание основного контейнера
+     * Инициализация основного контейнера
      */
     createMainContainer() {
-        // Удаляем существующий контейнер если есть
-        const existingContainer = document.getElementById('viewer-script-container');
+        // Проверяем существующий контейнер из HTML
+        const existingContainer = document.getElementById('viewerScriptContainer');
         if (existingContainer) {
-            existingContainer.remove();
+            // Контейнер уже существует в HTML, используем его
+            return;
         }
 
-        // Создаем основной контейнер
+        // Если контейнер не найден, создаем его (резервный вариант)
         const container = document.createElement('div');
-        container.id = 'viewer-script-container';
+        container.id = 'viewerScriptContainer';
         container.className = 'viewer-script-container';
         document.body.appendChild(container);
     }
@@ -248,7 +249,7 @@ class ViewerApp {
         }
 
         // Удаляем основной контейнер
-        const container = document.getElementById('viewer-script-container');
+        const container = document.getElementById('viewerScriptContainer');
         if (container) {
             container.remove();
         }
@@ -398,12 +399,23 @@ class ViewerApp {
 // Глобальная инициализация при загрузке DOM
 document.addEventListener('DOMContentLoaded', async () => {
     try {
+        // Добавляем небольшую задержку для уверенности, что DOM полностью загружен
+        await new Promise(resolve => setTimeout(resolve, 10));
+        
+        // Проверяем наличие необходимых элементов перед инициализацией
+        const container = document.getElementById('viewerScriptContainer');
+        if (!container) {
+            logger.error('Контейнер viewerScriptContainer не найден в DOM');
+            return;
+        }
+
         window.viewerApp = new ViewerApp();
         await window.viewerApp.initialize();
         logger.info('Приложение режима просмотра запущено');
     } catch (error) {
         logger.error('Ошибка при запуске приложения режима просмотра', {
-            error: error.message
+            error: error.message,
+            stack: error.stack
         });
     }
 });

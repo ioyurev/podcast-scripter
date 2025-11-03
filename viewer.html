@@ -5,9 +5,59 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Просмотр скрипта подкаста</title>
     <link rel="stylesheet" href="src/css/style.css">
+    <link rel="stylesheet" href="src/css/header.css">
     <link rel="stylesheet" href="src/css/viewer.css">
 </head>
 <body>
+    <header class="global-header">
+        <h1>Просмотр скрипта подкаста</h1>
+        <div class="header-content">
+            <div class="stats-container" id="viewerStatsContainer">
+                <div class="stat-item">
+                    <span>Слова</span>
+                    <span id="totalWords">0</span>
+                </div>
+                <div class="stat-item">
+                    <span>Длительность</span>
+                    <span id="totalDuration">0:00</span>
+                </div>
+                <div class="stat-item">
+                    <span>Роли</span>
+                    <span id="roleCount">0</span>
+                </div>
+                <div class="stat-item">
+                    <span>Реплики</span>
+                    <span id="replicaCount">0</span>
+                </div>
+            </div>
+            <div class="header-controls">
+                <div class="file-controls">
+                    <button id="viewerBackBtn" class="btn btn-secondary">
+                        <i data-feather="arrow-left"></i> Редактировать
+                    </button>
+                    <button id="viewerLoadJsonBtn" class="btn btn-primary">
+                        <i data-feather="upload"></i> Открыть файл
+                    </button>
+                    <input type="file" id="viewerJsonFileInput" accept=".json" style="display: none;">
+                    <button id="viewerPrintBtn" class="btn btn-outline-secondary">
+                        <i data-feather="printer"></i> Печать
+                    </button>
+                </div>
+                <button id="viewerThemeToggleBtn" class="theme-toggle-btn" title="Переключить тему">
+                    <span class="theme-icon">🌙</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="viewer-script-container" id="viewerScriptContainer">
+        <div class="viewer-replicas-container">
+            <div class="viewer-replicas-list" id="viewerReplicasList">
+                <!-- Реплики будут загружаться сюда -->
+            </div>
+        </div>
+    </div>
+
     <script type="module" src="src/js/viewer/main.js"></script>
 </body>
 </html>

@@ -88,7 +88,7 @@ export default [
   // Logger configuration - allow console usage (overrides project config)
   {
     name: 'logger-config',
-    files: ['js/logger.js'],
+    files: ['src/js/logger.js'],
     rules: {
       'no-console': 'off'  // Allow console usage in logger file
     }

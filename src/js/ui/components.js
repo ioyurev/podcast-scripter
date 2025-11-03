@@ -3,6 +3,7 @@ import feather from 'feather-icons';
 import { logger } from '../logger.js';
 import { Replica } from '../models/replica.js';
 import { Speaker, SoundEffect } from '../models/role.js';
+import { ScriptData } from '../models/script-data.js';
 
 import { SoundEffectElement } from './sound-effect-element.js';
 import { SpeakerReplicaElement } from './speaker-replica-element.js';
@@ -510,7 +511,10 @@ class UIComponents {
         this.showFilenameDialog((filename) => {
             if (filename !== null) {
                 // Get the current script data from dataManager
-                const scriptData = this.dataManager.exportData();
+                const data = this.dataManager.exportData();
+                // Create a ScriptData instance from the exported data
+                const scriptData = new ScriptData(data);
+
                 const success = this.dataService.saveToJSONFile(scriptData, filename);
                 if (success) {
                     logger.logUserAction('скачивание скрипта', {

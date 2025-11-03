@@ -1,0 +1,310 @@
+/* Unified Header Styles for Podcast Scripter Application */
+
+/* Global Header Base Styles */
+.global-header {
+    background: var(--color-white);
+    border-bottom: 2px solid var(--color-gray-border-light);
+    padding: var(--spacing-lg) var(--spacing-xl);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--shadow-md);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.global-header h1 {
+    color: var(--color-text-primary);
+    font-size: var(--font-size-xl);
+    margin: 0;
+    flex: 1;
+}
+
+/* Header Content Container */
+.header-content {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xl);
+    flex: 2;
+}
+
+/* Header Controls */
+.header-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    flex: 1;
+    justify-content: flex-end;
+}
+
+/* Statistics Container */
+.stats-container {
+    display: flex;
+    gap: var(--spacing-xl);
+    align-items: center;
+    background: none;
+    padding: 0;
+    border: none;
+}
+
+.stats-container .stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    font-size: 0.9em;
+    background: var(--color-gray-light);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--border-radius-md);
+    margin: 0;
+    min-width: 80px;
+    text-align: center;
+}
+
+.stats-container .stat-item span:first-child {
+    color: var(--color-text-secondary);
+    font-size: 0.8em;
+    margin-bottom: 2px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stats-container .stat-item span:last-child {
+    font-weight: bold;
+    font-size: 1.1em;
+    color: var(--color-text-primary);
+}
+
+/* File Controls */
+.file-controls {
+    display: flex;
+    gap: var(--spacing-md);
+    align-items: center;
+}
+
+.file-controls button {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    background: var(--color-primary);
+    color: var(--color-white);
+    border: none;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    font-size: var(--font-size-base);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 100px;
+}
+
+.file-controls button:hover {
+    background: var(--color-primary-dark);
+    transform: scale(1.05);
+}
+
+.file-controls button:active {
+    transform: scale(0.98);
+}
+
+/* Theme Toggle Button */
+.theme-toggle-btn {
+    background: var(--color-gray-light);
+    border: none;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    font-size: var(--font-size-lg);
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+    color: var(--color-text-primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.theme-toggle-btn:hover {
+    background: var(--color-gray);
+    color: var(--color-white);
+}
+
+.theme-toggle-btn .theme-icon {
+    transition: transform var(--transition-normal);
+}
+
+.theme-toggle-btn:hover .theme-icon {
+    transform: scale(1.1);
+}
+
+/* Button Styles */
+.btn {
+    padding: var(--btn-padding-md);
+    border: 2px solid transparent;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    font-size: var(--btn-font-size-md);
+    font-weight: 600;
+    transition: all var(--transition-fast);
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    vertical-align: middle;
+    border: none;
+    min-width: 80px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.btn i {
+    width: 16px;
+    height: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.btn-primary {
+    background: var(--color-primary);
+    color: var(--color-white);
+}
+
+.btn-primary:hover {
+    background: var(--color-primary-dark);
+    transform: scale(1.05);
+}
+
+.btn-primary:active {
+    transform: scale(0.98);
+}
+
+.btn-secondary {
+    background: var(--color-gray);
+    color: var(--color-white);
+}
+
+.btn-secondary:hover {
+    background: var(--color-gray-dark);
+    transform: scale(1.05);
+}
+
+.btn-outline-secondary {
+    background: transparent;
+    color: var(--color-gray);
+    border: 2px solid var(--color-gray);
+}
+
+.btn-outline-secondary:hover {
+    background: var(--color-gray);
+    color: var(--color-white);
+    transform: scale(1.05);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .global-header {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+    }
+    
+    .header-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        width: 100%;
+    }
+    
+    .stats-container {
+        flex-direction: row;
+        gap: 10px;
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .stats-container .stat-item {
+        margin: 0;
+        flex: 1;
+    }
+    
+    .header-controls {
+        width: 100%;
+        justify-content: space-between;
+        display: flex;
+        align-items: center;
+    }
+    
+    .file-controls {
+        align-self: center;
+        width: auto;
+        justify-content: flex-start;
+        margin: 0;
+    }
+    
+    .theme-toggle-btn {
+        width: 36px;
+        height: 36px;
+        margin-left: var(--spacing-sm);
+    }
+}
+
+/* Print Styles */
+@media print {
+    .global-header {
+        display: none !important;
+    }
+}
+
+/* Dark Theme Support */
+[data-theme="dark"] .global-header {
+    background: var(--color-gray-lighter);
+    border-color: var(--color-gray-border);
+}
+
+[data-theme="dark"] .global-header h1 {
+    color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .stats-container .stat-item {
+    background: var(--color-gray-border);
+    color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .stats-container .stat-item span:first-child {
+    color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .stats-container .stat-item span:last-child {
+    color: var(--color-text-primary);
+}
+
+/* High Contrast Support */
+@media (prefers-contrast: high) {
+    .global-header {
+        border-width: 3px;
+    }
+    
+    .stats-container .stat-item {
+        border: 2px solid var(--color-text-primary);
+    }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+    .global-header,
+    .file-controls button,
+    .theme-toggle-btn {
+        transition: none;
+    }
+    
+    .file-controls button:hover,
+    .file-controls button:active,
+    .theme-toggle-btn:hover {
+        transform: none;
+    }
+}
