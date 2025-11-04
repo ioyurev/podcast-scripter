@@ -3,11 +3,11 @@ import { logger } from '../logger.js';
 import { Replica } from '../models/replica.js';
 import { Speaker, SoundEffect } from '../models/role.js';
 import { ScriptData } from '../models/script-data.js';
-import { featherIconsService } from '../utils/feather-icons.js';
 
-import { modalService } from './modal-service.js';
+import { ModalComponent } from './modal-component.js';
 import { SoundEffectElement } from './sound-effect-element.js';
 import { SpeakerReplicaElement } from './speaker-replica-element.js';
+import { ToastComponent } from './toast-component.js';
 
 /**
  * Компоненты пользовательского интерфейса
@@ -33,9 +33,10 @@ class UIComponents {
         this.updateReplicasList();
         this.updateStatistics();
         
-        // Инициализация Feather Icons
-        featherIconsService.setLogger(logger);
-        featherIconsService.initialize();
+        // Инициализация Feather Icons через app
+        if (window.app && typeof window.app.initFeatherIcons === 'function') {
+            window.app.initFeatherIcons();
+        }
         
         logger.info('Компоненты UI инициализированы и обновлены');
     }
@@ -254,10 +255,12 @@ class UIComponents {
                 alert('Не удалось открыть режим просмотра. Пожалуйста, перезагрузите страницу.');
             }
         } catch (error) {
-            logger.error('Ошибка при открытии режима просмотра', {
+            logger.time('ui-components-initialization-error');
+            logger.error('Ошибка при инициализации компонентов UI', {
                 error: error.message
             });
-            alert('Произошла ошибка при открытии режима просмотра.');
+            logger.timeEnd('ui-components-initialization-error');
+            throw error;
         }
     }
 
@@ -540,7 +543,7 @@ class UIComponents {
             // Устанавливаем предустановленное имя файла
             const defaultName = `podcast-script-${new Date().toISOString().slice(0, 10)}`;
             
-            const result = await modalService.show({
+            const result = await ModalComponent.show({
                 title: 'Скачать файл',
                 type: 'input',
                 content: (container) => {
@@ -595,30 +598,85 @@ class UIComponents {
      * @param {File} file - Файл для загрузки
      */
     async handleLoadScript(file) {
-        const scriptData = await this.dataService.loadFromJSONFileWithFeedback(file);
-        if (scriptData) {
-            // Import the loaded data into the data manager
-            const success = this.dataManager.importData(scriptData);
-            if (success) {
-                this.updateRolesList();
-                this.updateReplicasList();
-                logger.logUserAction('загрузка скрипта', {
-                    fileName: file.name,
-                    success: true
-                });
+        logger.debug('Начало обработки загрузки скрипта', { fileName: file.name, fileSize: file.size });
+        
+        try {
+            // Load the file data directly without modal
+            const scriptData = await this.dataService.loadFromJSONFile(file);
+            logger.debug('Результат загрузки из JSON файла', { scriptData: scriptData ? 'loaded' : 'null', hasRoles: scriptData?.roles?.length, hasReplicas: scriptData?.replicas?.length });
+            
+            if (scriptData) {
+                // Convert ScriptData to DataManager import format and import the data
+                logger.debug('Конвертация данных для импорта в DataManager', { rolesCount: scriptData.roles.length, replicasCount: scriptData.replicas.length });
+                const importData = this.dataService.convertForDataManagerImport(scriptData);
+                logger.debug('Начало импорта данных в DataManager', { rolesCount: importData.roles?.length, replicasCount: importData.replicas?.length });
+                const success = this.dataManager.importData(importData);
+                logger.debug('Результат импорта в DataManager', { success: success });
+                
+                if (success) {
+                    // Update UI lists after successful import
+                    this.updateRolesList();
+                    this.updateReplicasList();
+                    this.updateStatistics(); // Обновляем статистику после импорта
+                    
+                    logger.logUserAction('загрузка скрипта', {
+                        fileName: file.name,
+                        success: true,
+                        roleCount: importData.roles?.length,
+                        replicaCount: importData.replicas?.length
+                    });
+                    
+                    // Show success toast notification
+                    try {
+                        ToastComponent.success(`Файл "${file.name}" успешно загружен! Роли: ${importData.roles?.length || 0}, Реплики: ${importData.replicas?.length || 0}`, { duration: 5000 });
+                    } catch (error) {
+                        logger.error('Ошибка при показе toast уведомления', { error: error.message });
+                        // Fallback to simple alert if toast fails
+                        // console.info(`Файл "${file.name}" успешно загружен! Роли: ${importData.roles?.length || 0}, Реплики: ${importData.replicas?.length || 0}`);
+                    }
+                } else {
+                    logger.logUserAction('ошибка загрузки скрипта', {
+                        fileName: file.name,
+                        success: false,
+                        roleCount: importData.roles?.length,
+                        replicaCount: importData.replicas?.length
+                    });
+                    
+                    // Show error toast notification
+                    try {
+                        ToastComponent.error('Ошибка при загрузке скрипта - не удалось импортировать данные в DataManager', { duration: 7000 });
+                    } catch (error) {
+                        logger.error('Ошибка при показе toast уведомления', { error: error.message });
+                        // Fallback to simple alert if toast fails
+                        // console.error('Ошибка при загрузке скрипта - не удалось импортировать данные в DataManager');
+                    }
+                }
             } else {
-                modalService.showInfo('Ошибка', 'Ошибка при загрузке скрипта');
                 logger.logUserAction('ошибка загрузки скрипта', {
                     fileName: file.name,
                     success: false
                 });
+                
+                // Show error toast notification
+                try {
+                    ToastComponent.error('Ошибка при загрузке скрипта - не удалось загрузить данные из JSON файла', { duration: 7000 });
+                } catch (error) {
+                    logger.error('Ошибка при показе toast уведомления', { error: error.message });
+                    // Fallback to simple alert if toast fails
+                    // console.error('Ошибка при загрузке скрипта - не удалось загрузить данные из JSON файла');
+                }
             }
-        } else {
-            modalService.showInfo('Ошибка', 'Ошибка при загрузке скрипта');
-            logger.logUserAction('ошибка загрузки скрипта', {
-                fileName: file.name,
-                success: false
-            });
+        } catch (error) {
+            logger.error('Ошибка при загрузке скрипта', { error: error.message });
+            
+            // Show error toast notification
+            try {
+                ToastComponent.error(`Ошибка при загрузке скрипта - ${error.message}`, { duration: 7000 });
+            } catch (toastError) {
+                logger.error('Ошибка при показе toast уведомления', { error: toastError.message });
+                // Fallback to simple alert if toast fails
+                // console.error(`Ошибка при загрузке скрипта - ${error.message}`);
+            }
         }
     }
 
@@ -639,7 +697,9 @@ class UIComponents {
         this.updateRoleSelect();
         
         // Инициализация Feather Icons для новых элементов
-        featherIconsService.update();
+        if (window.app && typeof window.app.updateFeatherIcons === 'function') {
+            window.app.updateFeatherIcons();
+        }
         
         logger.debug('Список ролей обновлен', { roleCount: roles.length });
     }
@@ -778,13 +838,27 @@ class UIComponents {
         const role = this.dataManager.roleManager.findById(roleId);
         if (!role) return;
 
+        // Находим оригинальный индекс роли перед удалением
+        const allRoles = this.dataManager.roleManager.getAll();
+        const originalRoleIndex = allRoles.findIndex(r => r.id === role.id);
+        
         // Подсчет связанных реплик
         const relatedReplicas = this.dataManager.replicaManager.getByRole(roleId);
         const replicaCount = relatedReplicas.length;
 
+        // Находим оригинальные индексы всех связанных реплик перед удалением
+        const allReplicas = this.dataManager.replicaManager.getAll();
+        const relatedReplicaData = relatedReplicas.map(replica => {
+            const originalIndex = allReplicas.findIndex(r => r.id === replica.id);
+            const replicaData = replica.toJSON();
+            replicaData.originalIndex = originalIndex;
+            return replicaData;
+        });
+
         // Сохраняем данные для отмены
         const roleData = role.toJSON();
-        const relatedReplicaData = relatedReplicas.map(replica => replica.toJSON());
+        // Добавляем оригинальный индекс роли в данные для восстановления
+        roleData.originalIndex = originalRoleIndex;
 
         // Показываем кастомное модальное окно
         this.showDeleteConfirmationModal(
@@ -810,25 +884,48 @@ class UIComponents {
                         () => {
                             // Функция отмены
             const restoredRole = role.constructor.fromJSON(roleData);
+            // Удаляем originalIndex из данных роли, чтобы не сохранялось в JSON
+            delete restoredRole.originalIndex;
             // Восстанавливаем цвет, если он был сохранен
             if (role.color) {
                 restoredRole.color = role.color;
             }
             this.dataManager.addRole(restoredRole);
                             
+                            // Перемещаем роль на оригинальную позицию
+                            if (roleData.originalIndex >= 0) {
+                                this.dataManager.roleManager.move(roleId, roleData.originalIndex);
+                            }
+                            
                             // Восстанавливаем связанные реплики
                             relatedReplicaData.forEach(replicaData => {
                                 const restoredReplica = Replica.fromJSON(replicaData);
+                                // Удаляем originalIndex из данных реплики, чтобы не сохранялось в JSON
+                                delete restoredReplica.originalIndex;
                                 restoredReplica.setRole(roleId);
                                 this.dataManager.addReplica(restoredReplica);
+                                
+                                // Перемещаем реплику на оригинальную позицию
+                                if (replicaData.originalIndex >= 0) {
+                                    this.dataManager.replicaManager.move(restoredReplica.id, replicaData.originalIndex);
+                                }
                             });
 
                             this.updateRolesList();
                             this.updateReplicasList();
+                            this.updateStatistics();
+                            this.updateReplicaControls();
+                            
+                            // Сохраняем данные в localStorage для персистентности
+                            if (window.app && typeof window.app.saveDataToStorage === 'function') {
+                                window.app.saveDataToStorage();
+                            }
+                            
                             logger.logUserAction('отмена удаления роли', { 
                                 roleId: roleId,
                                 replicaCount: replicaCount,
-                                roleName: role.name
+                                roleName: role.name,
+                                originalIndex: roleData.originalIndex
                             });
                         },
                         'warning'
@@ -837,7 +934,8 @@ class UIComponents {
                     logger.logUserAction('удаление роли', { 
                         roleId: roleId,
                         replicaCount: replicaCount,
-                        roleName: role.name
+                        roleName: role.name,
+                        originalIndex: originalRoleIndex
                     });
                 }
             }
@@ -924,6 +1022,8 @@ class UIComponents {
         if (role && role.type === 'sound') {
             return this.createSoundEffectElement(replica, role, index);
         } else {
+            // Если роль не найдена или это не звуковой эффект, создаем элемент спикера
+            // В случае отсутствия роли, передаем null и позволяем элементу обработать эту ситуацию
             return this.createSpeakerReplicaElement(replica, role, index);
         }
     }
@@ -1040,7 +1140,7 @@ class UIComponents {
             const role = this.dataManager.roleManager.findById(replica.roleId);
             const roleName = role ? role.name : 'Без роли';
             
-            const result = await modalService.show({
+            const result = await ModalComponent.show({
                 title: 'Редактирование реплики',
                 type: 'custom',
                 size: 'lg',
@@ -1128,8 +1228,14 @@ class UIComponents {
         const replica = this.dataManager.replicaManager.findById(replicaId);
         if (!replica) return;
 
+        // Находим оригинальный индекс реплики перед удалением
+        const allReplicas = this.dataManager.replicaManager.getAll();
+        const originalIndex = allReplicas.findIndex(r => r.id === replicaId);
+        
         // Сохраняем данные для отмены
         const replicaData = replica.toJSON();
+        // Добавляем оригинальный индекс в данные для восстановления
+        replicaData.originalIndex = originalIndex;
 
         // Показываем кастомное модальное окно
         this.showDeleteConfirmationModal(
@@ -1151,13 +1257,45 @@ class UIComponents {
                         `Реплика с ID "${replicaId}" удалена`,
                         () => {
                             // Функция отмены
+                            // Проверяем, существует ли роль, к которой привязана реплика
+                            const roleExists = this.dataManager.roleManager.findById(replicaData.roleId);
+                            if (!roleExists) {
+                                logger.warn('Роль для восстанавливаемой реплики не существует', { 
+                                    replicaId: replicaData.id, 
+                                    roleId: replicaData.roleId 
+                                });
+                                // Показываем предупреждение пользователю
+                                ToastComponent.warning('Роль для этой реплики была удалена. Реплика не может быть восстановлена.', { duration: 500 });
+                                return;
+                            }
+                            
                             const restoredReplica = Replica.fromJSON(replicaData);
+                            // Удаляем originalIndex из данных реплики, чтобы не сохранялось в JSON
+                            delete restoredReplica.originalIndex;
+                            
+                            // Добавляем реплику через DataManager
                             this.dataManager.addReplica(restoredReplica);
+                            
+                            // Перемещаем реплику на оригинальную позицию
+                            if (replicaData.originalIndex >= 0) {
+                                this.dataManager.replicaManager.move(replicaId, replicaData.originalIndex);
+                            }
+                            
+                            // Обновляем список реплик и статистику после восстановления
                             this.updateReplicasList();
+                            this.updateStatistics();
+                            this.updateReplicaControls();
+                            
+                            // Сохраняем данные в localStorage для персистентности
+                            if (window.app && typeof window.app.saveDataToStorage === 'function') {
+                                window.app.saveDataToStorage();
+                            }
+                            
                             logger.logUserAction('отмена удаления реплики', { 
                                 replicaId: replicaId,
                                 textLength: replica.text.length,
-                                roleId: replica.roleId
+                                roleId: replica.roleId,
+                                originalIndex: replicaData.originalIndex
                             });
                         },
                         'warning'
@@ -1166,7 +1304,8 @@ class UIComponents {
                     logger.logUserAction('удаление реплики', { 
                         replicaId: replicaId,
                         textLength: replica.text.length,
-                        roleId: replica.roleId
+                        roleId: replica.roleId,
+                        originalIndex: originalIndex
                     });
                 }
             }
@@ -1246,10 +1385,29 @@ class UIComponents {
     }
 
     /**
-     * Обновление статистики
+     * Обновление всех списков (оптимизированный метод для загрузки данных)
      */
-    updateStatistics() {
+    updateAllLists() {
+        // Блокируем обновление статистики во время массового обновления
         const stats = this.dataManager.getStatistics();
+        logger.group('Обновление UI компонентов');
+        this.updateRolesList();
+        this.updateReplicasList();
+        this.updateStatistics(stats); // Передаем статистику напрямую чтобы избежать повторного вычисления
+        
+        logger.debug('Все списки обновлены', {
+            roleCount: this.dataManager.roleManager.size(),
+            replicaCount: this.dataManager.replicaManager.size()
+        });
+        logger.groupEnd();
+    }
+
+    /**
+     * Обновление статистики
+     * @param {Object} precomputedStats - Предварительно вычисленная статистика (опционально)
+     */
+    updateStatistics(precomputedStats = null) {
+        const stats = precomputedStats || this.dataManager.getStatistics();
         
         const totalWordsElement = document.getElementById('totalWords');
         const totalDurationElement = document.getElementById('totalDuration');
@@ -1320,7 +1478,7 @@ class UIComponents {
      */
     async showDeleteConfirmationModal(title, message, onConfirm, onCancel = null) {
         try {
-            const result = await modalService.show({
+            const result = await ModalComponent.show({
                 title: title,
                 type: 'confirmation',
                 content: message,
@@ -1365,84 +1523,30 @@ class UIComponents {
      * @param {string} type - Тип уведомления (warning, success, error)
      */
     showToast(message, onUndo, type = 'warning') {
-        // Удаляем существующие тосты
-        document.querySelectorAll('.toast').forEach(toast => toast.remove());
-
-        const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-        toast.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 16px 20px;
-            background: var(--color-gray-lighter);
-            border: 2px solid var(--color-gray-border);
-            border-radius: 8px;
-            box-shadow: var(--shadow-lg);
-            z-index: 10001;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            animation: slideIn 0.3s ease-out;
-            max-width: 400px;
-        `;
-
-        const toastContent = document.createElement('div');
-        toastContent.className = 'toast-content';
-        toastContent.style.cssText = `
-            flex: 1;
-            font-size: 14px;
-            color: var(--color-text-primary);
-            line-height: 1.4;
-        `;
-        toastContent.textContent = message;
-
-        const toastActions = document.createElement('div');
-        toastActions.className = 'toast-actions';
-        toastActions.style.cssText = `
-            display: flex;
-            gap: 8px;
-        `;
-
-        if (onUndo) {
-        const undoBtn = document.createElement('button');
-        undoBtn.innerHTML = '<i data-feather="rotate-ccw"></i> Отменить';
-        undoBtn.className = 'btn btn-sm btn-warning toast-btn undo';
-        undoBtn.addEventListener('click', () => {
-            onUndo();
-            toast.remove();
-        });
-        toastActions.appendChild(undoBtn);
-        }
-
-        const closeBtn = document.createElement('button');
-        closeBtn.innerHTML = '<i data-feather="x"></i>';
-        closeBtn.className = 'btn btn-sm btn-secondary toast-btn close';
-        closeBtn.addEventListener('click', () => {
-            toast.remove();
-        });
-        toastActions.appendChild(closeBtn);
-
-        toast.appendChild(toastContent);
-        toast.appendChild(toastActions);
-        document.body.appendChild(toast);
-
-        // Инициализация Feather Icons для всех иконок в тосте
-        // Используем requestAnimationFrame для гарантии, что элемент уже добавлен в DOM
-        if (typeof feather !== 'undefined') {
-            requestAnimationFrame(() => {
-                feather.replace();
-            });
-        }
-
-        // Автоматическое удаление через 15 секунд (как вы просили)
-        setTimeout(() => {
-            if (document.body.contains(toast)) {
-                toast.remove();
+        // Используем стандартизированный ToastComponent
+        try {
+            if (onUndo) {
+                return ToastComponent.show(message, { 
+                    type, 
+                    duration: 15000, // 15 секунд как в оригинальной реализации
+                    showUndo: true, 
+                    onUndo: onUndo 
+                });
+            } else {
+                return ToastComponent.show(message, { 
+                    type, 
+                    duration: 15000 // 15 секунд как в оригинальной реализации
+                });
             }
-        }, 15000);
-
-        return toast;
+        } catch (error) {
+            logger.error('Ошибка при показе toast уведомления', { error: error.message });
+            // Fallback to simple alert if toast fails
+            if (onUndo) {
+                alert(message);
+            } else {
+                alert(message);
+            }
+        }
     }
 
     /**

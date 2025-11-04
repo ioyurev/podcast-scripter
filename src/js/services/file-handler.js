@@ -49,7 +49,7 @@ class FileHandler {
 
             return true;
         } catch (error) {
-            logger.error('Ошибка при скачивании скрипта', {
+            logger.error('Ошибка при сохранении скрипта', {
                 error: error.message
             });
             return false;
@@ -64,14 +64,19 @@ class FileHandler {
     async loadScript(file) {
         return new Promise((resolve) => {
             try {
+                logger.time('load-script-total');
                 const reader = new FileReader();
                 
                 reader.onload = (event) => {
                     try {
+                        logger.time('parse-and-validate');
                         const data = JSON.parse(event.target.result);
                         
                         if (this.validateScriptData(data)) {
+                            logger.time('import-data');
                             const success = this.dataManager.importData(data);
+                            logger.timeEnd('import-data');
+                            
                             if (success) {
                                 logger.logFileOperation('загрузка скрипта', file.name, {
                                     fileSize: file.size,
@@ -79,17 +84,22 @@ class FileHandler {
                                     replicaCount: data.replicas.length,
                                     version: data.version
                                 });
+                                logger.timeEnd('load-script-total');
                                 resolve(true);
                             } else {
+                                logger.timeEnd('load-script-total');
                                 resolve(false);
                             }
                         } else {
+                            logger.timeEnd('load-script-total');
                             logger.error('Невалидные данные скрипта', {
                                 fileName: file.name
                             });
                             resolve(false);
                         }
+                        logger.timeEnd('parse-and-validate');
                     } catch (parseError) {
+                        logger.timeEnd('load-script-total');
                         logger.error('Ошибка парсинга JSON файла', {
                             error: parseError.message,
                             fileName: file.name
@@ -99,6 +109,7 @@ class FileHandler {
                 };
 
                 reader.onerror = () => {
+                    logger.timeEnd('load-script-total');
                     logger.error('Ошибка чтения файла', {
                         fileName: file.name
                     });
@@ -107,6 +118,7 @@ class FileHandler {
 
                 reader.readAsText(file);
             } catch (error) {
+                logger.timeEnd('load-script-total');
                 logger.error('Ошибка при загрузке скрипта', {
                     error: error.message,
                     fileName: file.name
@@ -201,23 +213,30 @@ class FileHandler {
     async importFromFile(file) {
         return new Promise((resolve) => {
             try {
+                logger.time('import-from-file-total');
                 const reader = new FileReader();
                 
                 reader.onload = (event) => {
                     try {
+                        logger.time('parse-and-validate-import');
                         const data = JSON.parse(event.target.result);
                         if (this.validateScriptData(data)) {
                             logger.logFileOperation('импорт из файла', file.name, {
                                 fileSize: file.size
                             });
+                            logger.timeEnd('parse-and-validate-import');
+                            logger.timeEnd('import-from-file-total');
                             resolve(data);
                         } else {
+                            logger.timeEnd('parse-and-validate-import');
+                            logger.timeEnd('import-from-file-total');
                             logger.error('Невалидные данные при импорте', {
                                 fileName: file.name
                             });
                             resolve(null);
                         }
                     } catch (parseError) {
+                        logger.timeEnd('import-from-file-total');
                         logger.error('Ошибка парсинга JSON при импорте', {
                             error: parseError.message,
                             fileName: file.name
@@ -227,6 +246,7 @@ class FileHandler {
                 };
 
                 reader.onerror = () => {
+                    logger.timeEnd('import-from-file-total');
                     logger.error('Ошибка чтения файла при импорте', {
                         fileName: file.name
                     });
@@ -235,6 +255,7 @@ class FileHandler {
 
                 reader.readAsText(file);
             } catch (error) {
+                logger.timeEnd('import-from-file-total');
                 logger.error('Ошибка при импорте файла', {
                     error: error.message,
                     fileName: file.name

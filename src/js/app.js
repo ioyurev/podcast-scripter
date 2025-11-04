@@ -1,4 +1,3 @@
-
 // Импорты всех необходимых классов
 import { DataService } from './core/data-service.js';
 import { logger } from './logger.js';
@@ -34,6 +33,9 @@ class PodcastScripterApp {
             this.dataService = new DataService();
             logger.info('Сервис данных создан');
 
+            // Инициализация Feather Icons
+            this.initFeatherIcons();
+
             // Создание компонентов UI
             this.uiComponents = new UIComponents(this.dataManager, this.dataService);
             logger.info('Компоненты UI созданы');
@@ -46,10 +48,11 @@ class PodcastScripterApp {
             this.loadSavedData();
             
         } catch (error) {
+            logger.time('app-initialization-error');
             logger.error('Ошибка при инициализации приложения', {
-                error: error.message,
-                stack: error.stack
+                error: error.message
             });
+            logger.timeEnd('app-initialization-error');
             alert('Произошла ошибка при инициализации приложения. Пожалуйста, перезагрузите страницу.');
         }
     }
@@ -63,10 +66,57 @@ class PodcastScripterApp {
             if (savedData) {
                 const data = JSON.parse(savedData);
                 if (this.dataService.validateScriptData(data)) {
-                    this.dataManager.importData(data);
-                    this.uiComponents.updateRolesList();
-                    this.uiComponents.updateReplicasList();
-                    logger.info('Сохраненные данные загружены из localStorage');
+                    // Проверяем размер данных чтобы избежать проблем с производительностью
+                    const roleCount = data.roles?.length || 0;
+                    const replicaCount = data.replicas?.length || 0;
+                    const totalItems = roleCount + replicaCount;
+                    
+                    // Устанавливаем разумный лимит для предотвращения чрезмерной нагрузки
+                    const MAX_ITEMS = 10000; // Максимум 10,000 элементов
+                    
+                    if (totalItems > MAX_ITEMS) {
+                        logger.warn('Слишком большой объем данных в localStorage, загрузка отменена', {
+                            roleCount: roleCount,
+                            replicaCount: replicaCount,
+                            totalItems: totalItems,
+                            maxItems: MAX_ITEMS
+                        });
+                        
+                        // Предлагаем пользователю очистить данные
+                        if (confirm(`Обнаружен очень большой объем данных (${totalItems} элементов). Это может вызвать проблемы с производительностью. Очистить localStorage и начать с пустого скрипта?`)) {
+                            localStorage.removeItem('podcastScriptData');
+                            logger.info('localStorage очищен пользователем из-за большого объема данных');
+                        }
+                        return; // Не загружаем данные если их слишком много
+                    }
+                    
+                    if (totalItems > 10) { // Если больше 10 элементов, показываем что грузим
+                        logger.group('Загрузка сохраненных данных');
+                        logger.info('Начало загрузки большого объема данных', {
+                            roleCount: roleCount,
+                            replicaCount: replicaCount
+                        });
+                    }
+
+                    // Convert data if needed and import into DataManager
+                    const importData = this.dataService.convertForDataManagerImport(data);
+                    this.dataManager.importData(importData);
+                    
+                    // Обновляем UI в одном вызове для оптимизации
+                    this.uiComponents.updateAllLists();
+                    
+                    if (totalItems > 10) {
+                        logger.info('Сохраненные данные загружены из localStorage', {
+                            roleCount: roleCount,
+                            replicaCount: replicaCount
+                        });
+                        logger.groupEnd();
+                    } else {
+                        logger.info('Сохраненные данные загружены из localStorage', {
+                            roleCount: roleCount,
+                            replicaCount: replicaCount
+                        });
+                    }
                 } else {
                     logger.warn('Невалидные данные в localStorage, очистка');
                     localStorage.removeItem('podcastScriptData');
@@ -76,7 +126,6 @@ class PodcastScripterApp {
             logger.error('Ошибка при загрузке сохраненных данных', {
                 error: error.message
             });
-            localStorage.removeItem('podcastScriptData');
         }
     }
 
@@ -86,12 +135,19 @@ class PodcastScripterApp {
     saveDataToStorage() {
         try {
             const data = this.dataManager.exportData();
-            const scriptData = new ScriptData(data);
-            const success = this.dataService.saveToStorage(scriptData, 'podcastScriptData');
-            if (success) {
-                logger.debug('Данные сохранены в localStorage');
+            // Validate the data before saving
+            if (this.dataService.validateScriptData(data)) {
+                const success = this.dataService.saveToStorage(data, 'podcastScriptData');
+                if (success) {
+                    logger.debug('Данные сохранены в localStorage');
+                } else {
+                    logger.error('Ошибка при сохранении данных в localStorage');
+                }
             } else {
-                logger.error('Ошибка при сохранении данных в localStorage');
+                logger.error('Невалидные данные для сохранения в localStorage', {
+                    roleCount: data.roles?.length || 0,
+                    replicaCount: data.replicas?.length || 0
+                });
             }
         } catch (error) {
             logger.error('Ошибка при сохранении данных в localStorage', {

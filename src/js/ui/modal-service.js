@@ -1,12 +1,134 @@
-import { featherIconsService } from '../utils/feather-icons.js';
+import { logger } from '../logger.js';
+import { domService } from '../utils/dom-utils.js';
+import { eventService } from '../utils/event-service.js';
+
+import { ButtonComponent } from './button-component.js';
+import { InputComponent } from './input-component.js';
+import { ModalComponent } from './modal-component.js';
+import { ToastComponent } from './toast-component.js';
 
 /**
  * Универсальный сервис для создания модальных окон
+ * Теперь использует стандартизированные компоненты
  */
 class ModalService {
     constructor() {
         this.activeModal = null;
         this.modalStack = [];
+        this.modalRegistry = new Map(); // Регистр активных модальных окон
+        this.modalCounter = 0; // Счетчик для генерации уникальных ID
+    }
+
+    /**
+     * Генерация уникального ID для модального окна
+     * @returns {string} Уникальный ID
+     */
+    generateModalId() {
+        return `modal_${Date.now()}_${++this.modalCounter}`;
+    }
+
+    /**
+     * Регистрация модального окна в реестре
+     * @param {string} modalId - Уникальный ID модального окна
+     * @param {ModalComponent} modalInstance - Экземпляр модального окна
+     * @param {Object} metadata - Метаданные модального окна
+     */
+    registerModal(modalId, modalInstance, metadata = {}) {
+        const modalInfo = {
+            id: modalId,
+            instance: modalInstance,
+            metadata: metadata,
+            createdAt: new Date(),
+            closed: false
+        };
+        this.modalRegistry.set(modalId, modalInfo);
+        logger.debug('Модальное окно зарегистрировано', {
+            modalId: modalId,
+            title: metadata.title,
+            type: metadata.type
+        });
+    }
+
+    /**
+     * Дерегистрация модального окна из реестра
+     * @param {string} modalId - ID модального окна для дерегистрации
+     */
+    unregisterModal(modalId) {
+        if (this.modalRegistry.has(modalId)) {
+            const modalInfo = this.modalRegistry.get(modalId);
+            modalInfo.closed = true;
+            this.modalRegistry.delete(modalId);
+            logger.debug('Модальное окно дерегистрировано', { modalId: modalId });
+        }
+    }
+
+    /**
+     * Поиск модальных окон по метаданным
+     * @param {Object} searchCriteria - Критерии поиска
+     * @returns {Array} Массив найденных модальных окон
+     */
+    findModalsByMetadata(searchCriteria) {
+        const results = [];
+        for (const [   , modalInfo] of this.modalRegistry.entries()) {
+            if (!modalInfo.closed) {
+                let matches = true;
+                for (const [key, value] of Object.entries(searchCriteria)) {
+                    if (modalInfo.metadata[key] !== value) {
+                        matches = false;
+                        break;
+                    }
+                }
+                if (matches) {
+                    results.push(modalInfo);
+                }
+            }
+        }
+        return results;
+    }
+
+    /**
+     * Закрытие модальных окон по метаданным
+     * @param {Object} searchCriteria - Критерии поиска модальных окон
+     * @returns {number} Количество закрытых модальных окон
+     */
+    closeModalsByMetadata(searchCriteria) {
+        const modalsToClose = this.findModalsByMetadata(searchCriteria);
+        let closedCount = 0;
+
+        for (const modalInfo of modalsToClose) {
+            try {
+                if (modalInfo.instance && typeof modalInfo.instance.closeModal === 'function') {
+                    modalInfo.instance.closeModal(null);
+                    closedCount++;
+                }
+            } catch (error) {
+                logger.error('Ошибка при закрытии модального окна по метаданным', {
+                    modalId: modalInfo.id,
+                    error: error.message
+                });
+            }
+        }
+
+        return closedCount;
+    }
+
+    /**
+     * Получение информации о всех зарегистрированных модальных окнах
+     * @returns {Array} Массив информации о модальных окнах
+     */
+    getRegisteredModals() {
+        return Array.from(this.modalRegistry.values());
+    }
+
+    /**
+     * Очистка закрытых модальных окон из реестра
+     */
+    cleanupClosedModals() {
+        for (const [modalId, modalInfo] of this.modalRegistry.entries()) {
+            if (modalInfo.closed) {
+                this.modalRegistry.delete(modalId);
+            }
+        }
     }
 
     /**
@@ -25,498 +147,319 @@ class ModalService {
      * @returns {Promise} - Promise, который разрешается с результатом модального окна
      */
     show(options = {}) {
-        return new Promise((resolve, reject) => {
-            try {
-                // Значения по умолчанию
-                const defaults = {
-                    title: '',
-                    content: '',
-                    buttons: [],
-                    type: 'default',
-                    size: 'md',
-                    onClose: null,
-                    closable: true,
-                    closeOnEscape: true,
-                    showCloseButton: true,
-                    className: '',
-                    zIndex: 10000
-                };
-
-                const config = { ...defaults, ...options };
-
-                // Создаем overlay
-                const overlay = document.createElement('div');
-                overlay.className = 'modal-overlay';
-                overlay.style.cssText = `
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    background: rgba(0, 0, 0, 0.5);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    z-index: ${config.zIndex};
-                    animation: fadeIn 0.2s ease-in-out;
-                `;
-
-                // Определяем CSS классы в зависимости от типа
-                const modalClasses = [
-                    'modal-content',
-                    `modal-${config.type}`,
-                    `modal-${config.size}`,
-                    config.className
-                ].filter(Boolean).join(' ');
-
-                // Создаем модальное окно
-                const modal = document.createElement('div');
-                modal.className = modalClasses;
-                modal.style.cssText = `
-                    background: var(--color-white);
-                    border-radius: 8px;
-                    box-shadow: var(--shadow-lg);
-                    max-width: 500px;
-                    width: 90%;
-                    max-height: 80vh;
-                    overflow-y: auto;
-                    animation: slideIn 0.2s ease-in-out;
-                    display: flex;
-                    flex-direction: column;
-                `;
-
-                // Устанавливаем размер в зависимости от конфигурации
-                this._setSizeStyles(modal, config.size);
-
-                // Заголовок
-                if (config.title) {
-                    const header = document.createElement('div');
-                    header.className = 'modal-header';
-                    header.style.cssText = `
-                        padding: 20px;
-                        border-bottom: 1px solid var(--color-gray-border);
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: center;
-                    `;
-
-                    const titleElement = document.createElement('h3');
-                    titleElement.style.cssText = `
-                        margin: 0;
-                        color: var(--color-text-primary);
-                        font-size: 18px;
-                        display: flex;
-                        align-items: center;
-                        gap: 10px;
-                    `;
-                    titleElement.innerHTML = this._getTitleWithIcon(config.title, config.type);
-                    header.appendChild(titleElement);
-
-                    // Кнопка закрытия
-                    if (config.showCloseButton) {
-                        const closeBtn = document.createElement('button');
-                        closeBtn.className = 'modal-close-btn';
-                        closeBtn.style.cssText = `
-                            background: none;
-                            border: none;
-                            font-size: 1.5em;
-                            cursor: pointer;
-                            color: var(--color-text-secondary);
-                            padding: 0;
-                            width: 30px;
-                            height: 30px;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            border-radius: 4px;
-                            transition: all var(--transition-fast);
-                        `;
-                        closeBtn.innerHTML = '<i data-feather="x"></i>';
-                        closeBtn.addEventListener('click', () => {
-                            this._closeModal(overlay, config.onClose, resolve, null);
-                        });
-                        closeBtn.addEventListener('mouseenter', () => {
-                            closeBtn.style.color = 'var(--color-danger)';
-                        });
-                        closeBtn.addEventListener('mouseleave', () => {
-                            closeBtn.style.color = 'var(--color-text-secondary)';
-                        });
-                        header.appendChild(closeBtn);
-                    }
-
-                    modal.appendChild(header);
-                }
-
-                // Основное содержимое
-                const body = document.createElement('div');
-                body.className = 'modal-body';
-                body.style.cssText = `
-                    padding: ${config.title ? '0 20px' : '20px'};
-                    flex: 1;
-                    overflow-y: auto;
-                `;
-
-                if (typeof config.content === 'function') {
-                    // Если content - функция, вызываем её с контекстом для добавления элементов
-                    const contentResult = config.content(body);
-                    if (contentResult) {
-                        body.appendChild(contentResult);
-                    }
-                } else if (typeof config.content === 'string') {
-                    body.textContent = config.content;
-                } else if (config.content instanceof HTMLElement) {
-                    body.appendChild(config.content);
-                } else {
-                    body.appendChild(this._createContentElement(config.content));
-                }
-
-                modal.appendChild(body);
-
-                // Кнопки
-                if (config.buttons && config.buttons.length > 0) {
-                    const footer = document.createElement('div');
-                    footer.className = 'modal-footer';
-                    footer.style.cssText = `
-                        padding: 20px;
-                        border-top: 1px solid var(--color-gray-border);
-                        display: flex;
-                        gap: 10px;
-                        justify-content: flex-end;
-                    `;
-
-                    config.buttons.forEach((buttonConfig) => {
-                        const button = this._createButton(buttonConfig);
-                        button.addEventListener('click', (e) => {
-                            e.preventDefault();
-                            const result = buttonConfig.onClick ? buttonConfig.onClick(e) : true;
-                            if (buttonConfig.autoClose !== false) {
-                                this._closeModal(overlay, config.onClose, resolve, result);
-                            } else {
-                                resolve(result);
-                            }
-                        });
-                        footer.appendChild(button);
-                    });
-
-                    modal.appendChild(footer);
-                }
-
-                overlay.appendChild(modal);
-                document.body.appendChild(overlay);
-
-                // Сохраняем активное модальное окно
-                this.activeModal = { overlay, modal, config, resolve, reject };
-
-                // Инициализация Feather Icons
-                if (typeof feather !== 'undefined') {
-                    requestAnimationFrame(() => {
-                        featherIconsService.update();
-                    });
-                }
-
-                // Обработчики событий
-                if (config.closable) {
-                    overlay.addEventListener('click', (e) => {
-                        if (e.target === overlay) {
-                            this._closeModal(overlay, config.onClose, resolve, null);
-                        }
-                    });
-                }
-
-                if (config.closeOnEscape) {
-                    const handleEscape = (e) => {
-                        if (e.key === 'Escape') {
-                            this._closeModal(overlay, config.onClose, resolve, null);
-                        }
-                    };
-                    document.addEventListener('keydown', handleEscape);
-                    
-                    // Удаляем обработчик при закрытии
-                    const cleanup = () => {
-                        document.removeEventListener('keydown', handleEscape);
-                    };
-                    overlay.addEventListener('remove', cleanup);
-                }
-
-                // Фокус на первом элементе управления
-                this._focusFirstElement(modal);
-
-            } catch (error) {
-                reject(error);
-            }
-        });
+        return ModalComponent.show(options);
     }
-
-    /**
-     * Закрытие модального окна
-     */
-    _closeModal(overlay, onClose, resolve, result) {
-        if (onClose) {
-            onClose();
-        }
-        
-        // Анимация закрытия
-        overlay.style.animation = 'fadeOut 0.2s ease-in-out';
-        
-        setTimeout(() => {
-            if (overlay.parentNode) {
-                overlay.parentNode.removeChild(overlay);
-            }
-            resolve(result);
-            if (this.activeModal && this.activeModal.overlay === overlay) {
-                this.activeModal = null;
-            }
-        }, 200);
-    }
-
-    /**
-     * Установка стилей размера
-     */
-    _setSizeStyles(modal, size) {
-        const sizeStyles = {
-            'sm': 'max-width: 400px; width: 80%;',
-            'md': 'max-width: 500px; width: 90%;',
-            'lg': 'max-width: 700px; width: 90%;',
-            'xl': 'max-width: 900px; width: 95%;',
-            'full': 'max-width: 95vw; width: 95vw; height: 90vh;'
-        };
-        
-        if (sizeStyles[size]) {
-            modal.style.cssText += sizeStyles[size];
-        }
-    }
-
-    /**
-     * Создание кнопки
-     */
-    _createButton(config) {
-        const button = document.createElement('button');
-        const defaults = {
-            text: 'OK',
-            icon: null,
-            type: 'secondary', // primary, secondary, danger, success, warning
-            className: '',
-            autoClose: true
-        };
-        
-        const buttonConfig = { ...defaults, ...config };
-        
-        const typeClasses = {
-            'primary': 'btn btn-primary',
-            'secondary': 'btn btn-secondary',
-            'danger': 'btn btn-danger',
-            'success': 'btn btn-success',
-            'warning': 'btn btn-warning'
-        };
-        
-        button.className = [
-            typeClasses[buttonConfig.type] || typeClasses.secondary,
-            buttonConfig.className
-        ].filter(Boolean).join(' ');
-        
-        button.style.cssText += `
-            cursor: pointer;
-            font-weight: 600;
-            transition: all var(--transition-fast);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        `;
-        
-        if (buttonConfig.icon) {
-            button.innerHTML = `<i data-feather="${buttonConfig.icon}"></i> ${buttonConfig.text}`;
-        } else {
-            button.textContent = buttonConfig.text;
-        }
-        
-        return button;
-    }
-
-    /**
-     * Создание элемента содержимого
-     */
-    _createContentElement(content) {
-        const container = document.createElement('div');
-        if (typeof content === 'string') {
-            container.textContent = content;
-        } else if (content instanceof HTMLElement) {
-            container.appendChild(content);
-        } else if (Array.isArray(content)) {
-            content.forEach(item => {
-                if (typeof item === 'string') {
-                    const p = document.createElement('p');
-                    p.textContent = item;
-                    container.appendChild(p);
-                } else if (item instanceof HTMLElement) {
-                    container.appendChild(item);
-                }
-            });
-        }
-        return container;
-    }
-
-    /**
-     * Получение заголовка с иконкой в зависимости от типа
-     */
-    _getTitleWithIcon(title, type) {
-        const icons = {
-            'confirmation': '⚠️',
-            'input': '📥',
-            'notification': '🔔',
-            'warning': '⚠️',
-            'error': '❌',
-            'success': '✅',
-            'info': 'ℹ️',
-            'edit': '✏️'
-        };
-        
-        const icon = icons[type] || '';
-        return `${icon} ${title}`.trim();
-    }
-
-    /**
-     * Фокус на первом элементе управления
-     */
-    _focusFirstElement(modal) {
-        setTimeout(() => {
-            const firstInput = modal.querySelector('input, textarea, select, button');
-            if (firstInput) {
-                firstInput.focus();
-            }
-        }, 100);
-    }
-
-    /**
-     * Методы для часто используемых модальных окон
-     */
 
     /**
      * Показ модального окна подтверждения
      */
     showConfirmation(title, message, confirmText = 'Подтвердить', cancelText = 'Отмена') {
-        return this.show({
-            title: title,
-            content: message,
-            type: 'confirmation',
-            buttons: [
-                {
-                    text: cancelText,
-                    icon: 'x-circle',
-                    type: 'secondary',
-                    onClick: () => false,
-                    autoClose: true
-                },
-                {
-                    text: confirmText,
-                    icon: 'check',
-                    type: 'danger',
-                    onClick: () => true,
-                    autoClose: true
-                }
-            ]
-        });
+        return ModalComponent.showConfirmation(title, message, confirmText, cancelText);
     }
 
     /**
      * Показ модального окна с вводом текста
      */
     showInput(title, placeholder, defaultValue = '') {
-        return this.show({
-            title: title,
-            type: 'input',
-            content: (container) => {
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.className = 'form-control';
-                input.style.cssText = `
-                    width: 100%;
-                    padding: 10px;
-                    border: 2px solid var(--color-gray-border);
-                    border-radius: 4px;
-                    font-size: 14px;
-                    font-family: Arial, sans-serif;
-                    box-sizing: border-box;
-                `;
-                input.placeholder = placeholder;
-                input.value = defaultValue;
-                input.focus();
-                input.select();
-                
-                // Обработка Enter
-                input.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') {
-                        // Это будет обработано через кнопки
-                    }
-                });
-                
-                container.appendChild(input);
-                return input;
-            },
-            buttons: [
-                {
-                    text: 'Отмена',
-                    icon: 'x-circle',
-                    type: 'secondary',
-                    onClick: () => null,
-                    autoClose: true
-                },
-                {
-                    text: 'ОК',
-                    icon: 'check',
-                    type: 'primary',
-                    onClick: () => {
-                        const input = container.querySelector('input');
-                        return input.value.trim() || null;
-                    },
-                    autoClose: true
-                }
-            ]
-        });
+        return ModalComponent.showInput(title, placeholder, defaultValue);
     }
 
     /**
      * Показ информационного модального окна
      */
     showInfo(title, message) {
-        return this.show({
-            title: title,
-            content: message,
-            type: 'info',
-            buttons: [
-                {
-                    text: 'OK',
-                    icon: 'check',
-                    type: 'primary',
-                    onClick: () => true,
-                    autoClose: true
-                }
-            ]
-        });
+        return ModalComponent.showInfo(title, message);
+    }
+
+    /**
+     * Показ модального окна с выбором
+     * @param {string} title - заголовок
+     * @param {Array} options - массив опций [{value, text}]
+     * @returns {Promise} Promise с выбранным значением
+     */
+    showSelect(title, options) {
+        return ModalComponent.showSelect(title, options);
     }
 
     /**
      * Закрытие всех активных модальных окон
      */
     closeAll() {
-        if (this.activeModal) {
-            const { overlay, config, resolve } = this.activeModal;
-            if (overlay && overlay.parentNode) {
-                overlay.parentNode.removeChild(overlay);
-            }
-            if (config.onClose) {
-                config.onClose();
-            }
-            resolve(null);
-            this.activeModal = null;
-        }
+        ModalComponent.closeAll();
     }
 
     /**
      * Проверка, есть ли активные модальные окна
      */
     hasActiveModal() {
-        return !!this.activeModal;
+        return ModalComponent.hasActiveModal();
+    }
+
+    /**
+     * Поиск модальных окон по метаданным (публичный метод для использования в других компонентах)
+     * @param {Object} searchCriteria - Критерии поиска
+     * @returns {Array} Массив найденных модальных окон
+     */
+    findModalsByMetadataPublic(searchCriteria) {
+        return this.findModalsByMetadata(searchCriteria);
+    }
+
+    /**
+     * Закрытие модальных окон по метаданным (публичный метод для совместимости)
+     * @param {Object} searchCriteria - Критерии поиска модальных окон по метаданным
+     * @returns {number} Количество закрытых модальных окон
+     */
+    closeModalsByMetadataPublic(searchCriteria) {
+        return this.closeModalsByMetadata(searchCriteria);
+    }
+
+    /**
+     * Показ уведомления с использованием нового ToastComponent
+     * @param {string} message - Сообщение
+     * @param {string} type - Тип уведомления (success, error, warning, info)
+     * @param {number} duration - Длительность показа в миллисекундах
+     * @returns {ToastComponent} Экземпляр toast компонента
+     */
+    showNotification(message, type = 'info', duration = 5000) {
+        return ToastComponent.show(message, { type, duration });
+    }
+
+    /**
+     * Показ уведомления об успехе
+     * @param {string} message - Сообщение
+     * @param {number} duration - Длительность показа
+     * @returns {ToastComponent} Экземпляр toast компонента
+     */
+    showSuccess(message, duration = 5000) {
+        return ToastComponent.success(message, { duration });
+    }
+
+    /**
+     * Показ уведомления об ошибке
+     * @param {string} message - Сообщение
+     * @param {number} duration - Длительность показа
+     * @returns {ToastComponent} Экземпляр toast компонента
+     */
+    showError(message, duration = 7000) {
+        return ToastComponent.error(message, { duration });
+    }
+
+    /**
+     * Показ предупреждающего уведомления
+     * @param {string} message - Сообщение
+     * @param {number} duration - Длительность показа
+     * @returns {ToastComponent} Экземпляр toast компонента
+     */
+    showWarning(message, duration = 6000) {
+        return ToastComponent.warning(message, { duration });
+    }
+
+    /**
+     * Показ информационного уведомления
+     * @param {string} message - Сообщение
+     * @param {number} duration - Длительность показа
+     * @returns {ToastComponent} Экземпляр toast компонента
+     */
+    showInfoNotification(message, duration = 4000) {
+        return ToastComponent.info(message, { duration });
+    }
+
+    /**
+     * Удаление всех активных уведомлений
+     */
+    removeAllNotifications() {
+        ToastComponent.removeAll();
+    }
+
+    /**
+     * Создание кнопки с использованием нового ButtonComponent
+     * @param {Object} options - Опции кнопки
+     * @returns {ButtonComponent} Экземпляр кнопки
+     */
+    createButton(options) {
+        return ButtonComponent.create(options);
+    }
+
+    /**
+     * Создание input с использованием нового InputComponent
+     * @param {Object} options - Опции input
+     * @returns {InputComponent} Экземпляр input
+     */
+    createInput(options) {
+        return InputComponent.create(options);
+    }
+
+    /**
+     * Безопасное выполнение DOM операций
+     * @param {Function} operation - Функция для выполнения
+     * @param {*} defaultValue - Значение по умолчанию при ошибке
+     * @returns {*} Результат операции или defaultValue
+     */
+    safeDOMExecute(operation, defaultValue = null) {
+        return domService.safeExecute(operation, defaultValue);
+    }
+
+    /**
+     * Подписка на событие с использованием eventService
+     * @param {string} event - Название события
+     * @param {Function} callback - Функция-обработчик
+     * @returns {Function} Функция отписки
+     */
+    subscribeToEvent(event, callback) {
+        return eventService.subscribe(event, callback);
+    }
+
+    /**
+     * Публикация события
+     * @param {string} event - Название события
+     * @param {...any} args - Аргументы события
+     * @returns {number} Количество обработчиков, вызванных для события
+     */
+    publishEvent(event, ...args) {
+        return eventService.publish(event, ...args);
+    }
+
+    /**
+     * Ожидание события
+     * @param {string} event - Название события
+     * @param {number} timeout - Таймаут в миллисекундах
+     * @returns {Promise<any>} Promise, разрешающийся с аргументами события
+     */
+    waitForEvent(event, timeout = 5000) {
+        return eventService.waitForEvent(event, timeout);
+    }
+
+    /**
+     * Подписка на DOM событие
+     * @param {HTMLElement} element - DOM элемент
+     * @param {string} event - Тип DOM события
+     * @param {Function} handler - Обработчик события
+     * @param {Object} options - Опции addEventListener
+     * @returns {Function} Функция отписки
+     */
+    subscribeToDOMEvent(element, event, handler, options = {}) {
+        return eventService.subscribeToDOMEvent(element, event, handler, options);
+    }
+
+    /**
+     * Ожидание DOM события
+     * @param {HTMLElement} element - DOM элемент
+     * @param {string} event - Тип DOM события
+     * @param {number} timeout - Таймаут в миллисекундах
+     * @returns {Promise<Event>} Promise, разрешающийся с DOM событием
+     */
+    waitForDOMEvent(element, event, timeout = 500) {
+        return eventService.waitForDOMEvent(element, event, timeout);
+    }
+
+    /**
+     * Получение элемента с кэшированием
+     * @param {string} elementId - ID элемента
+     * @returns {Object} Объект с методами для работы с элементом
+     */
+    getElement(elementId) {
+        return domService.getElement(elementId);
+    }
+
+    /**
+     * Валидация формы
+     * @param {string|HTMLElement} formSelector - Селектор формы или сам элемент
+     * @param {Object} rules - Правила валидации
+     * @returns {Object} Результат валидации
+     */
+    validateForm(formSelector, rules) {
+        return domService.validateForm(formSelector, rules);
+    }
+
+    /**
+     * Установка значений формы
+     * @param {string|HTMLElement} formSelector - Селектор формы или сам элемент
+     * @param {Object} values - Значения для установки
+     */
+    setFormValues(formSelector, values) {
+        domService.setFormValues(formSelector, values);
+    }
+
+    /**
+     * Получение значений формы
+     * @param {string|HTMLElement} formSelector - Селектор формы или сам элемент
+     * @returns {Object} Значения формы
+     */
+    getFormValues(formSelector) {
+        return domService.getFormValues(formSelector);
+    }
+
+    /**
+     * Ожидание загрузки DOM элемента
+     * @param {string} selector - CSS селектор элемента
+     * @param {number} timeout - Таймаут в миллисекундах
+     * @returns {Promise<HTMLElement>} Promise, разрешающийся с найденным элементом
+     */
+    waitForElement(selector, timeout = 5000) {
+        return domService.waitForElement(selector, timeout);
+    }
+
+    /**
+     * Выполнение функции после загрузки DOM
+     * @param {Function} callback - Функция для выполнения
+     */
+    onDOMReady(callback) {
+        domService.onDOMReady(callback);
+    }
+
+    /**
+     * Логирование пользовательского действия
+     * @param {string} action - Действие
+     * @param {Object} data - Дополнительные данные
+     */
+    logUserAction(action, data = {}) {
+        logger.logUserAction(action, data);
+    }
+
+    /**
+     * Логирование ошибки
+     * @param {string} message - Сообщение об ошибке
+     * @param {Object} data - Дополнительные данные
+     */
+    logError(message, data = {}) {
+        logger.error(message, data);
+    }
+
+    /**
+     * Логирование информации
+     * @param {string} message - Сообщение
+     * @param {Object} data - Дополнительные данные
+     */
+    logInfo(message, data = {}) {
+        logger.info(message, data);
+    }
+
+    /**
+     * Логирование отладочной информации
+     * @param {string} message - Сообщение
+     * @param {Object} data - Дополнительные данные
+     */
+    logDebug(message, data = {}) {
+        logger.debug(message, data);
+    }
+
+    /**
+     * Инициализация Feather Icons для новых элементов
+     * @param {HTMLElement} parent - Родительский элемент для инициализации
+     */
+    initFeatherIcons(parent = document) {
+        if (typeof feather !== 'undefined') {
+            feather.replace({ target: parent });
+        }
+    }
+
+    /**
+     * Обновление Feather Icons
+     */
+    updateFeatherIcons() {
+        if (typeof feather !== 'undefined') {
+            feather.update();
+        }
     }
 }
 

@@ -68,26 +68,31 @@ class Speaker extends Role {
         const oldWpm = this.wordsPerMinute;
         this.wordsPerMinute = Math.max(50, Math.min(500, wpm)); // Ограничение от 50 до 500
         this.updateTimestamp();
+        logger.time('update-speaker-speed');
         logger.logRoleAction('изменение скорости речи', this.name, {
             roleId: this.id,
             oldWpm,
             newWpm: this.wordsPerMinute
         });
+        logger.timeEnd('update-speaker-speed');
     }
 
     /**
      * Расчет времени для заданного количества слов
      * @param {number} wordCount - Количество слов
+     * @param {boolean} suppressLog - Подавлять ли логирование (для массовой обработки)
      * @returns {number} Время в минутах
      */
-    calculateTime(wordCount) {
+    calculateTime(wordCount, suppressLog = false) {
         const timeInMinutes = wordCount / this.wordsPerMinute;
-        logger.logCalculation('расчет времени спикера', timeInMinutes, {
-            roleId: this.id,
-            speakerName: this.name,
-            wordCount,
-            wordsPerMinute: this.wordsPerMinute
-        });
+        if (!suppressLog) {
+            logger.logCalculation('расчет времени спикера', timeInMinutes, {
+                roleId: this.id,
+                speakerName: this.name,
+                wordCount,
+                wordsPerMinute: this.wordsPerMinute
+            });
+        }
         return timeInMinutes;
     }
 
@@ -147,11 +152,13 @@ class SoundEffect extends Role {
         const oldDuration = this.duration;
         this.duration = Math.max(0, duration); // Не может быть отрицательным
         this.updateTimestamp();
+        logger.time('update-sound-duration');
         logger.logRoleAction('изменение длительности звука', this.name, {
             roleId: this.id,
             oldDuration,
             newDuration: this.duration
         });
+        logger.timeEnd('update-sound-duration');
     }
 
     /**
@@ -254,11 +261,11 @@ class RoleManager extends Collection {
         json.forEach(roleData => {
             let role;
             if (roleData.type === 'speaker') {
-                role = Speaker.fromJSON(roleData);
+                role = Speaker.fromJSON(roleData); // Подавляем логи при массовой загрузке
             } else if (roleData.type === 'sound') {
-                role = SoundEffect.fromJSON(roleData);
+                role = SoundEffect.fromJSON(roleData); // Подавляем логи при массовой загрузке
             } else {
-                role = Role.fromJSON(roleData);
+                role = Role.fromJSON(roleData); // Подавляем логи при массовой загрузке
             }
             manager.add(role);
         });

@@ -2,7 +2,7 @@
 import { DataService } from '../core/data-service.js';
 import { logger } from '../logger.js';
 import { ScriptData } from '../models/script-data.js';
-import { modalService } from '../ui/modal-service.js';
+import { ToastComponent } from '../ui/toast-component.js';
 import { featherIconsService } from '../utils/feather-icons.js';
 
 import { ScriptViewer } from './script-viewer.js';
@@ -56,9 +56,11 @@ class ViewerApp {
             // Инициализация Feather Icons
             this.initFeatherIcons();
         } catch (error) {
-            this.logger.error('Ошибка при инициализации приложения просмотра', {
+            logger.time('viewer-initialization-error');
+            logger.error('Ошибка при инициализации приложения просмотра', {
                 error: error.message
             });
+            logger.timeEnd('viewer-initialization-error');
             throw error;
         }
     }
@@ -345,29 +347,6 @@ class ViewerApp {
      */
     async loadScriptFromJSON(file) {
         try {
-            // Показываем уведомление о начале загрузки
-            const result = await modalService.show({
-                title: 'Загрузка скрипта',
-                type: 'info',
-                content: `Загружаем файл: ${file.name}`,
-                buttons: [
-                    {
-                        text: 'Отмена',
-                        icon: 'x-circle',
-                        type: 'secondary',
-                        onClick: () => false,
-                        autoClose: true
-                    }
-                ],
-                closable: false,
-                closeOnEscape: false
-            });
-
-            // Если пользователь отменил, возвращаем false
-            if (result === false) {
-                return false;
-            }
-
             const scriptData = await this.dataService.loadFromJSONFile(file);
             if (scriptData) {
                 const success = await this.loadScript(scriptData);
@@ -379,16 +358,16 @@ class ViewerApp {
                         replicaCount: scriptData.replicas.length
                     });
                     
-                    // Показываем уведомление об успешной загрузке
-                    modalService.showInfo('Успех', 'Скрипт успешно загружен и отображен!');
+                    // Показываем toast уведомление об успешной загрузке
+                    ToastComponent.success(`Файл "${file.name}" успешно загружен! Роли: ${scriptData.roles.length}, Реплики: ${scriptData.replicas.length}`, { duration: 5000 });
                 } else {
                     this.logger.logUserAction('ошибка загрузки скрипта в режиме просмотра', {
                         fileName: file.name,
                         success: false
                     });
                     
-                    // Показываем уведомление об ошибке
-                    modalService.showInfo('Ошибка', 'Не удалось загрузить скрипт из файла.');
+                    // Показываем toast уведомление об ошибке
+                    ToastComponent.error('Не удалось загрузить скрипт из файла.', { duration: 7000 });
                 }
                 return success;
             } else {
@@ -397,8 +376,8 @@ class ViewerApp {
                     success: false
                 });
                 
-                // Показываем уведомление об ошибке
-                modalService.showInfo('Ошибка', 'Не удалось загрузить скрипт из файла.');
+                // Показываем toast уведомление об ошибке
+                ToastComponent.error('Не удалось загрузить скрипт из файла.', { duration: 7000 });
                 return false;
             }
         } catch (error) {
@@ -407,8 +386,8 @@ class ViewerApp {
                 fileName: file.name
             });
             
-            // Показываем уведомление об ошибке
-            modalService.showInfo('Ошибка', `Ошибка при загрузке файла: ${error.message}`);
+            // Показываем toast уведомление об ошибке
+            ToastComponent.error(`Ошибка при загрузке файла: ${error.message}`, { duration: 7000 });
             return false;
         }
     }

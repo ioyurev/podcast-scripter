@@ -165,6 +165,33 @@ class Collection {
     toJSON() {
         return this.items.map(item => item.toJSON());
     }
+
+    /**
+     * Перемещение элемента в коллекции
+     * @param {string} id - ID элемента для перемещения
+     * @param {number} newIndex - Новый индекс
+     * @returns {boolean} Успешно ли перемещено
+     */
+    move(id, newIndex) {
+        const currentIndex = this.items.findIndex(item => item.id === id);
+        if (currentIndex === -1 || newIndex < 0 || newIndex >= this.items.length) {
+            return false;
+        }
+
+        const item = this.items[currentIndex];
+        this.items.splice(currentIndex, 1);
+        this.items.splice(newIndex, 0, item);
+        this.updateTimestamp();
+        
+        logger.debug('Элемент перемещен в коллекции', {
+            itemId: id,
+            oldIndex: currentIndex,
+            newIndex: newIndex,
+            itemType: item.constructor.name
+        });
+        
+        return true;
+    }
 }
 
 // Экспорт для использования в модулях

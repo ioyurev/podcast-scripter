@@ -1,4 +1,8 @@
 import { logger } from '../logger.js';
+import { ModalComponent } from '../ui/modal-component.js';
+import { ToastComponent } from '../ui/toast-component.js';
+import { domService } from '../utils/dom-utils.js';
+import { eventService } from '../utils/event-service.js';
 import { featherIconsService } from '../utils/feather-icons.js';
 
 /**
@@ -8,20 +12,23 @@ class ViewerUIComponents {
     constructor(viewerApp) {
         this.viewerApp = viewerApp;
         this.logger = logger;
-        this.elements = {};
-        this.eventListeners = [];
+        this.elements = new Map(); // Используем Map для кэширования элементов
+        this.eventListeners = new Set(); // Используем Set для обработчиков событий
+        this.components = new Map(); // Храним созданные компоненты
     }
 
     /**
      * Инициализация UI компонентов
      */
     initialize() {
+        logger.time('ui-components-initialization');
         this.createControls();
         this.setupEventListeners();
         this.updateControls();
         this.logger.info('UI компоненты режима просмотра инициализированы');
         // Инициализация Feather Icons
         featherIconsService.update();
+        logger.timeEnd('ui-components-initialization');
     }
 
     /**
@@ -45,13 +52,22 @@ class ViewerUIComponents {
      * Создание элементов управления
      */
     createControls() {
-        // Ссылки на существующие статические элементы
-        this.elements.backBtn = document.getElementById('viewerBackBtn');
-        this.elements.loadJsonBtn = document.getElementById('viewerLoadJsonBtn');
-        this.elements.jsonFileInput = document.getElementById('viewerJsonFileInput');
-        this.elements.printBtn = document.getElementById('viewerPrintBtn');
-        this.elements.themeToggleBtn = document.getElementById('viewerThemeToggleBtn');
-        this.elements.statsContainer = document.getElementById('viewerStatsContainer');
+        // Используем domService для безопасного получения элементов
+        this.elements.set('backBtn', domService.getElement('viewerBackBtn'));
+        this.elements.set('loadJsonBtn', domService.getElement('viewerLoadJsonBtn'));
+        this.elements.set('jsonFileInput', domService.getElement('viewerJsonFileInput'));
+        this.elements.set('printBtn', domService.getElement('viewerPrintBtn'));
+        this.elements.set('themeToggleBtn', domService.getElement('viewerThemeToggleBtn'));
+        this.elements.set('statsContainer', domService.getElement('viewerStatsContainer'));
+    }
+
+    /**
+     * Получение элемента по ключу
+     * @param {string} key - ключ элемента
+     * @returns {Object} объект с методами для работы с элементом
+     */
+    getElement(key) {
+        return this.elements.get(key);
     }
 
     /**
@@ -69,8 +85,11 @@ class ViewerUIComponents {
         const hasData = this.viewerApp.currentData !== null;
         const canPrint = hasData;
 
-        if (this.elements.printBtn) {
-            this.elements.printBtn.disabled = !canPrint;
+        const printBtn = this.getElement('printBtn');
+        if (printBtn) {
+            printBtn.safeExecute(element => {
+                element.disabled = !canPrint;
+            });
         }
 
         // Обновляем статистику если есть данные
@@ -89,23 +108,15 @@ class ViewerUIComponents {
         }
 
         // Обновляем статистику в существующих элементах
-        const totalWordsElement = document.getElementById('totalWords');
-        const totalDurationElement = document.getElementById('totalDuration');
-        const roleCountElement = document.getElementById('roleCount');
-        const replicaCountElement = document.getElementById('replicaCount');
+        const totalWordsElement = domService.getElement('totalWords');
+        const totalDurationElement = domService.getElement('totalDuration');
+        const roleCountElement = domService.getElement('roleCount');
+        const replicaCountElement = domService.getElement('replicaCount');
 
-        if (totalWordsElement) {
-            totalWordsElement.textContent = statistics.totalWords;
-        }
-        if (totalDurationElement) {
-            totalDurationElement.textContent = statistics.totalDurationFormatted;
-        }
-        if (roleCountElement) {
-            roleCountElement.textContent = statistics.roleCount;
-        }
-        if (replicaCountElement) {
-            replicaCountElement.textContent = statistics.replicaCount;
-        }
+        totalWordsElement.setText(statistics.totalWords);
+        totalDurationElement.setText(statistics.totalDurationFormatted);
+        roleCountElement.setText(statistics.roleCount);
+        replicaCountElement.setText(statistics.replicaCount);
     }
 
     /**
@@ -127,47 +138,56 @@ class ViewerUIComponents {
      * @param {string} type - Тип уведомления (success, error, warning)
      */
     showNotification(message, type = 'info') {
-        // Удаляем существующие уведомления
-        document.querySelectorAll('.viewer-notification').forEach(el => el.remove());
+        // Используем ToastComponent вместо собственной реализации
+        return ToastComponent.show(message, { 
+            type, 
+            duration: 3000,
+            position: 'bottom-right'
+        });
+    }
 
-        const notification = document.createElement('div');
-        notification.className = `viewer-notification viewer-notification-${type}`;
-        notification.innerHTML = `
-            <div class="notification-content">${message}</div>
-            <button class="notification-close">&times;</button>
-        `;
+    /**
+     * Показ уведомления об успехе
+     * @param {string} message - Сообщение
+     */
+    showSuccess(message) {
+        return this.showNotification(message, 'success');
+    }
 
-        document.body.appendChild(notification);
+    /**
+     * Показ уведомления об ошибке
+     * @param {string} message - Сообщение
+     */
+    showError(message) {
+        return this.showNotification(message, 'error');
+    }
 
-        // Автоматическое скрытие через 3 секунды
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.remove();
-            }
-        }, 3000);
-
-        // Обработчик закрытия
-        const closeBtn = notification.querySelector('.notification-close');
-        if (closeBtn) {
-            closeBtn.addEventListener('click', () => {
-                notification.remove();
-            });
-        }
+    /**
+     * Показ предупреждающего уведомления
+     * @param {string} message - Сообщение
+     */
+    showWarning(message) {
+        return this.showNotification(message, 'warning');
     }
 
     /**
      * Очистка всех обработчиков событий
      */
     cleanup() {
-        // Удаляем обработчики событий
-        this.eventListeners.forEach(listener => {
-            listener.element.removeEventListener(listener.event, listener.handler);
-        });
-
-        // Удаляем созданные элементы
-        if (this.elements.controlsContainer) {
-            this.elements.controlsContainer.remove();
+        // Очищаем все зарегистрированные обработчики событий
+        for (const unsubscribe of this.eventListeners) {
+            unsubscribe();
         }
+        this.eventListeners.clear();
+
+        // Очищаем компоненты
+        for (const [, component] of this.components) {
+            component.destroy();
+        }
+        this.components.clear();
+
+        // Очищаем кэш элементов
+        this.elements.clear();
 
         this.logger.info('UI компоненты режима просмотра очищены');
     }
@@ -186,17 +206,19 @@ class ViewerUIComponents {
      * @param {string} theme - текущая тема
      */
     updateThemeButtonIcon(theme) {
-        const themeBtn = document.getElementById('viewerThemeToggleBtn');
-        const themeIcon = themeBtn ? themeBtn.querySelector('.theme-icon') : null;
-        if (themeIcon) {
-            if (theme === 'dark') {
-                themeIcon.textContent = '☀️'; // Солнце для темной темы (показываем светлую иконку)
-                themeBtn.title = 'Светлая тема';
-            } else {
-                themeIcon.textContent = '🌙'; // Луна для светлой темы (показываем темную иконку)
-                themeBtn.title = 'Темная тема';
+        const themeBtn = domService.getElement('viewerThemeToggleBtn');
+        themeBtn.safeExecute(element => {
+            const themeIcon = element.querySelector('.theme-icon');
+            if (themeIcon) {
+                if (theme === 'dark') {
+                    themeIcon.textContent = '☀️'; // Солнце для темной темы (показываем светлую иконку)
+                    element.title = 'Светлая тема';
+                } else {
+                    themeIcon.textContent = '🌙'; // Луна для светлой темы (показываем темную иконку)
+                    element.title = 'Темная тема';
+                }
             }
-        }
+        });
     }
 
     /**
@@ -204,55 +226,190 @@ class ViewerUIComponents {
      */
     setupEventListeners() {
         // Кнопка возврата к редактированию
-        if (this.elements.backBtn) {
-            this.elements.backBtn.addEventListener('click', () => {
-                this.viewerApp.backToEditor();
-            });
+        const backBtn = this.getElement('backBtn');
+        if (backBtn && backBtn.exists()) {
+            const unsubscribe = eventService.subscribeToDOMEvent(
+                backBtn.getElement(), 
+                'click', 
+                () => this.viewerApp.backToEditor()
+            );
+            this.eventListeners.add(unsubscribe);
         }
 
         // Кнопка загрузки JSON - теперь напрямую открывает файл
-        if (this.elements.loadJsonBtn) {
-            this.elements.loadJsonBtn.addEventListener('click', () => {
-                document.getElementById('viewerJsonFileInput').click();
-            });
+        const loadJsonBtn = this.getElement('loadJsonBtn');
+        if (loadJsonBtn && loadJsonBtn.exists()) {
+            const unsubscribe = eventService.subscribeToDOMEvent(
+                loadJsonBtn.getElement(),
+                'click',
+                () => {
+                    const fileInput = domService.getElement('viewerJsonFileInput');
+                    fileInput.safeExecute(element => element.click());
+                }
+            );
+            this.eventListeners.add(unsubscribe);
         }
 
         // Кнопка печати
-        if (this.elements.printBtn) {
-            this.elements.printBtn.addEventListener('click', () => {
-                this.handlePrint();
-            });
+        const printBtn = this.getElement('printBtn');
+        if (printBtn && printBtn.exists()) {
+            const unsubscribe = eventService.subscribeToDOMEvent(
+                printBtn.getElement(),
+                'click',
+                () => this.handlePrint()
+            );
+            this.eventListeners.add(unsubscribe);
         }
 
         // Обработчик для основного файла JSON
-        if (this.elements.jsonFileInput) {
-            this.elements.jsonFileInput.addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    this.viewerApp.loadScriptFromJSON(file);
+        const jsonFileInput = this.getElement('jsonFileInput');
+        if (jsonFileInput && jsonFileInput.exists()) {
+            const unsubscribe = eventService.subscribeToDOMEvent(
+                jsonFileInput.getElement(),
+                'change',
+                (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        this.viewerApp.loadScriptFromJSON(file);
+                    }
+                    e.target.value = ''; // Сброс файла
                 }
-                e.target.value = ''; // Сброс файла
-            });
+            );
+            this.eventListeners.add(unsubscribe);
         }
 
         // Обработчик клавиатуры
-        document.addEventListener('keydown', (e) => {
+        const keyboardHandler = (e) => {
             if (e.ctrlKey && e.key === 'p') {
                 e.preventDefault();
                 this.handlePrint();
             }
-        });
+        };
+        document.addEventListener('keydown', keyboardHandler);
+        this.eventListeners.add(() => document.removeEventListener('keydown', keyboardHandler));
 
         // Кнопка переключения темы
-        const themeToggleBtn = document.getElementById('viewerThemeToggleBtn');
-        if (themeToggleBtn) {
-            themeToggleBtn.addEventListener('click', () => {
-                this.viewerApp.toggleTheme();
-                this.updateThemeButtonIcon(this.viewerApp.getCurrentTheme());
-            });
+        const themeToggleBtn = domService.getElement('viewerThemeToggleBtn');
+        if (themeToggleBtn.exists()) {
+            const unsubscribe = eventService.subscribeToDOMEvent(
+                themeToggleBtn.getElement(),
+                'click',
+                () => {
+                    this.viewerApp.toggleTheme();
+                    this.updateThemeButtonIcon(this.viewerApp.getCurrentTheme());
+                }
+            );
+            this.eventListeners.add(unsubscribe);
         } else {
             this.logger.error('Элемент viewerThemeToggleBtn не найден в DOM');
         }
+    }
+
+    /**
+     * Создание кнопки с использованием стандартного компонента
+     * @param {Object} options - опции кнопки
+     * @returns {ButtonComponent} экземпляр кнопки
+     */
+    createButton(options) {
+        const button = ButtonComponent.create(options);
+        this.components.set(`button_${Date.now()}`, button);
+        return button;
+    }
+
+    /**
+     * Создание input с использованием стандартного компонента
+     * @param {Object} options - опции input
+     * @returns {InputComponent} экземпляр input
+     */
+    createInput(options) {
+        const input = InputComponent.create(options);
+        this.components.set(`input_${Date.now()}`, input);
+        return input;
+    }
+
+    /**
+     * Показ модального окна
+     * @param {Object} options - опции модального окна
+     * @returns {Promise} Promise с результатом
+     */
+    showModal(options) {
+        return ModalComponent.show(options);
+    }
+
+    /**
+     * Показ модального окна подтверждения
+     * @param {string} title - заголовок
+     * @param {string} message - сообщение
+     * @param {string} confirmText - текст подтверждения
+     * @param {string} cancelText - текст отмены
+     * @returns {Promise} Promise с результатом
+     */
+    showConfirmationModal(title, message, confirmText = 'Подтвердить', cancelText = 'Отмена') {
+        return ModalComponent.showConfirmation(title, message, confirmText, cancelText);
+    }
+
+    /**
+     * Показ модального окна с вводом текста
+     * @param {string} title - заголовок
+     * @param {string} placeholder - placeholder
+     * @param {string} defaultValue - значение по умолчанию
+     * @returns {Promise} Promise с введенным значением
+     */
+    showInputModal(title, placeholder, defaultValue = '') {
+        return ModalComponent.showInput(title, placeholder, defaultValue);
+    }
+
+    /**
+     * Показ информационного модального окна
+     * @param {string} title - заголовок
+     * @param {string} message - сообщение
+     * @returns {Promise} Promise с результатом
+     */
+    showInfoModal(title, message) {
+        return ModalComponent.showInfo(title, message);
+    }
+
+    /**
+     * Безопасное выполнение DOM операций
+     * @param {Function} operation - функция для выполнения
+     * @param {*} defaultValue - значение по умолчанию при ошибке
+     * @returns {*} результат операции или defaultValue
+     */
+    safeDOMExecute(operation, defaultValue = null) {
+        return domService.safeExecute(operation, defaultValue);
+    }
+
+    /**
+     * Подписка на событие
+     * @param {string} event - название события
+     * @param {Function} callback - функция-обработчик
+     * @returns {Function} функция отписки
+     */
+    subscribeToEvent(event, callback) {
+        return eventService.subscribe(event, callback);
+    }
+
+    /**
+     * Публикация события
+     * @param {string} event - название события
+     * @param {...any} args - аргументы события
+     * @returns {number} количество вызванных обработчиков
+     */
+    publishEvent(event, ...args) {
+        return eventService.publish(event, ...args);
+    }
+
+    /**
+     * Получение состояния компонентов
+     * @returns {Object} состояние компонентов
+     */
+    getComponentState() {
+        return {
+            elementCount: this.elements.size,
+            eventListenerCount: this.eventListeners.size,
+            componentCount: this.components.size,
+            hasData: !!this.viewerApp.currentData
+        };
     }
 }
 

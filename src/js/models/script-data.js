@@ -1,3 +1,5 @@
+import { logger } from '../logger.js';
+
 import { BaseModel } from './base.js';
 
 /**
@@ -18,19 +20,51 @@ class ScriptData extends BaseModel {
      * @returns {boolean} Валидны ли данные
      */
     validate() {
-        if (!this.roles || !Array.isArray(this.roles)) return false;
-        if (!this.replicas || !Array.isArray(this.replicas)) return false;
+        if (!this.roles || !Array.isArray(this.roles)) {
+            logger.error('Данные ролей не являются массивом', { roles: this.roles, rolesType: typeof this.roles });
+            return false;
+        }
+        if (!this.replicas || !Array.isArray(this.replicas)) {
+            logger.error('Данные реплик не являются массивом', { replicas: this.replicas, replicasType: typeof this.replicas });
+            return false;
+        }
         
         // Проверка структуры ролей
-        for (const role of this.roles) {
-            if (!role.id || !role.name || !role.type) return false;
-            if (!['speaker', 'sound'].includes(role.type)) return false;
+        for (let i = 0; i < this.roles.length; i++) {
+            const role = this.roles[i];
+            if (!role.id) {
+                logger.error('Роль не имеет ID', { roleIndex: i, role: role });
+                return false;
+            }
+            if (!role.name) {
+                logger.error('Роль не имеет имени', { roleIndex: i, role: role });
+                return false;
+            }
+            if (!role.type) {
+                logger.error('Роль не имеет типа', { roleIndex: i, role: role });
+                return false;
+            }
+            if (!['speaker', 'sound'].includes(role.type)) {
+                logger.error('Роль имеет недопустимый тип', { roleIndex: i, role: role, type: role.type });
+                return false;
+            }
         }
 
         // Проверка структуры реплик
-        for (const replica of this.replicas) {
-            if (!replica.id || typeof replica.text !== 'string') return false;
-            if (replica.roleId !== null && typeof replica.roleId !== 'string') return false;
+        for (let i = 0; i < this.replicas.length; i++) {
+            const replica = this.replicas[i];
+            if (!replica.id) {
+                logger.error('Реплика не имеет ID', { replicaIndex: i, replica: replica });
+                return false;
+            }
+            if (typeof replica.text !== 'string') {
+                logger.error('Реплика имеет недопустимый тип текста', { replicaIndex: i, replica: replica, textType: typeof replica.text });
+                return false;
+            }
+            if (replica.roleId !== null && typeof replica.roleId !== 'string') {
+                logger.error('Реплика имеет недопустимый тип roleId', { replicaIndex: i, replica: replica, roleId: replica.roleId, roleIdType: typeof replica.roleId });
+                return false;
+            }
         }
 
         return true;

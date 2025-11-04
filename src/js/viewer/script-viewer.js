@@ -44,10 +44,12 @@ class ScriptViewer {
                 replicaCount: scriptData.replicas.length
             });
         } catch (error) {
-            this.logger.error('Ошибка при отрисовке скрипта', {
+            logger.time('script-render-error');
+            logger.error('Ошибка при отрисовке скрипта', {
                 error: error.message
             });
-            this.renderErrorState(error.message);
+            logger.timeEnd('script-render-error');
+            throw error;
         }
     }
 

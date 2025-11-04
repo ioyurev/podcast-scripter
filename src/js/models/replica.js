@@ -20,18 +20,21 @@ class Replica extends BaseModel {
 
     /**
      * Обновление количества слов
+     * @param {boolean} suppressLog - Подавлять ли логирование (для массовой обработки)
      */
-    updateWordCount() {
+    updateWordCount(suppressLog = false) {
         if (this.text.trim()) {
             this.wordCount = this.text.trim().split(/\s+/).length;
         } else {
             this.wordCount = 0;
         }
         this.updateTimestamp();
-        logger.logCalculation('обновление количества слов реплики', this.wordCount, {
-            replicaId: this.id,
-            textLength: this.text.length
-        });
+        if (!suppressLog) {
+            logger.logCalculation('обновление количества слов реплики', this.wordCount, {
+                replicaId: this.id,
+                textLength: this.text.length
+            });
+        }
     }
 
     /**
@@ -59,10 +62,12 @@ class Replica extends BaseModel {
         const oldRoleId = this.roleId;
         this.roleId = roleId;
         this.updateTimestamp();
+        logger.time('update-replica-role');
         logger.logReplicaAction('изменение роли', this.id, {
             oldRoleId,
             newRoleId: roleId
         });
+        logger.timeEnd('update-replica-role');
     }
 
     /**
@@ -83,7 +88,7 @@ class Replica extends BaseModel {
      * @param {Object} json - JSON данные
      * @returns {Replica} Новый экземпляр реплики
      */
-    static fromJSON(json) {
+    static fromJSON(json, suppressLog = false) {
         const replica = new Replica(json.text, json.roleId);
         replica.id = json.id;
         
@@ -97,6 +102,10 @@ class Replica extends BaseModel {
         replica.createdAt = parseDate(json.createdAt);
         replica.updatedAt = parseDate(json.updatedAt);
         replica.wordCount = json.wordCount || 0;
+        // Обновляем количество слов без логирования при массовой загрузке
+        if (suppressLog) {
+            replica.updateWordCount(true);
+        }
         return replica;
     }
 }
@@ -214,29 +223,55 @@ class ReplicaManager extends Collection {
 
         // Длительность для реплик спикеров
         const speakerReplicas = this.getSpeakerReplicas(roleManager);
-        speakerReplicas.forEach(replica => {
-            const role = roleManager.findById(replica.roleId);
-            if (role instanceof Speaker) {
-                const duration = role.calculateTime(replica.wordCount);
-                totalDuration += duration;
-            }
-        });
+        if (speakerReplicas.length > 0) {
+            logger.group('Расчет длительности спикеров');
+            logger.debug('Начало расчета длительности для реплик спикеров', {
+                replicaCount: speakerReplicas.length
+            });
+            
+            speakerReplicas.forEach(replica => {
+                const role = roleManager.findById(replica.roleId);
+                if (role instanceof Speaker) {
+                    const duration = role.calculateTime(replica.wordCount, true); // Подавляем индивидуальные логи
+                    totalDuration += duration;
+                }
+            });
+            
+            logger.debug('Завершение расчета длительности для реплик спикеров', {
+                totalDuration: totalDuration
+            });
+            logger.groupEnd();
+        }
 
         // Длительность для звуковых эффектов
-        this.items.forEach(replica => {
+        const soundReplicas = this.items.filter(replica => {
             const role = roleManager.findById(replica.roleId);
-            if (role instanceof SoundEffect) {
-                const durationInMinutes = role.duration / 60;
-                totalDuration += durationInMinutes;
-            }
+            return role instanceof SoundEffect;
         });
+        
+        if (soundReplicas.length > 0) {
+            logger.group('Расчет длительности звуковых эффектов');
+            logger.debug('Начало расчета длительности для звуковых эффектов', {
+                replicaCount: soundReplicas.length
+            });
+            
+            soundReplicas.forEach(replica => {
+                const role = roleManager.findById(replica.roleId);
+                if (role instanceof SoundEffect) {
+                    const durationInMinutes = role.duration / 60;
+                    totalDuration += durationInMinutes;
+                }
+            });
+            
+            logger.debug('Завершение расчета длительности для звуковых эффектов', {
+                totalDuration: totalDuration
+            });
+            logger.groupEnd();
+        }
 
         logger.logCalculation('расчет общей длительности', totalDuration, {
             speakerReplicaCount: speakerReplicas.length,
-            soundReplicaCount: this.items.filter(replica => {
-                const role = roleManager.findById(replica.roleId);
-                return role instanceof SoundEffect;
-            }).length
+            soundReplicaCount: soundReplicas.length
         });
 
         return totalDuration;
@@ -250,7 +285,7 @@ class ReplicaManager extends Collection {
     static fromJSON(json) {
         const manager = new ReplicaManager();
         json.forEach(replicaData => {
-            const replica = Replica.fromJSON(replicaData);
+            const replica = Replica.fromJSON(replicaData, true); // Подавляем логи при массовой загрузке
             manager.add(replica);
         });
         return manager;
