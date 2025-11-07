@@ -10,3 +10,10 @@ import './ui/speaker-replica-element.js';
 import './ui/sound-effect-element.js';
 import './ui/components.js';
 import './app.js';
+
+// Инициализация Feather Icons после загрузки DOM
+import { featherIconsService } from './utils/feather-icons.js';
+
+document.addEventListener('DOMContentLoaded', async () => {
+    await featherIconsService.initializeAsync();
+});
