@@ -7,7 +7,6 @@ import { ToastComponent } from '../ui/toast-component.js';
 import { featherIconsService } from '../utils/feather-icons.js';
 
 import { ScriptViewer } from './script-viewer.js';
-import { StorageManager } from './storage-manager.js';
 import { ViewerUIComponents } from './ui-components.js';
 
 /**
@@ -15,7 +14,6 @@ import { ViewerUIComponents } from './ui-components.js';
  */
 class ViewerApp {
     constructor() {
-        this.storageManager = new StorageManager();
         this.dataService = new DataService();
         this.scriptViewer = null;
         this.uiComponents = null;
@@ -88,10 +86,16 @@ class ViewerApp {
      * Настройка слушателя изменений в localStorage
      */
     setupStorageListener() {
-        // Подписываемся на изменения в localStorage
-        this.storageUnsubscribe = this.storageManager.subscribe((data) => {
-            if (data) {
-                this.handleStorageChange(data);
+        // Подписываемся на изменения в localStorage через DataService
+        this.storageUnsubscribe = this.dataService.subscribeToStorageChanges((event) => {
+            if (event.key === 'podcastScriptViewerData' && event.newValue) {
+                try {
+                    const data = JSON.parse(event.newValue);
+                    this.handleStorageChange(data);
+                } catch (error) {
+                    this.logger.error('Ошибка при парсинге данных из storage event:', { error: error.message });
+                    this.handleStorageChange(null);
+                }
             }
         });
     }
@@ -101,7 +105,7 @@ class ViewerApp {
      */
     async loadInitialData() {
         // Сначала пробуем загрузить из localStorage
-        const scriptData = await this.dataService.loadFromStorage('podcastScriptViewerData');
+        const scriptData = this.dataService.loadFromStorage('podcastScriptViewerData');
         if (scriptData) {
             await this.loadScript(scriptData);
         } else {
@@ -207,7 +211,7 @@ class ViewerApp {
             isInitialized: this.isInitialized,
             hasData: !!this.currentData,
             currentData: this.currentData,
-            storageInfo: this.storageManager.getStorageInfo()
+            storageInfo: this.dataService.getStorageInfo('podcastScriptViewerData')
         };
     }
 
@@ -257,7 +261,7 @@ class ViewerApp {
      * Очистка данных
      */
     clearData() {
-        this.storageManager.clear();
+        this.dataService.clearStorage('podcastScriptViewerData');
         this.currentData = null;
         this.scriptViewer.clear();
         this.uiComponents.updateControls({ hasData: false });
