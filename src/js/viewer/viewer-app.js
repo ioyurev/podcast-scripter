@@ -1,4 +1,5 @@
 
+import { themeManager } from '../common/theme-manager.js';
 import { DataService } from '../core/data-service.js';
 import { logger } from '../logger.js';
 import { ScriptData } from '../models/script-data.js';
@@ -334,10 +335,10 @@ class ViewerApp {
      * Переключение темы
      */
     toggleTheme() {
-        const currentTheme = this.getCurrentTheme();
-        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        const newTheme = themeManager.toggleTheme(); // Используем общий менеджер
         this.setTheme(newTheme);
         localStorage.setItem('viewerTheme', newTheme);
+        return newTheme;
     }
 
     /**

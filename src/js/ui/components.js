@@ -1,4 +1,6 @@
 
+import { BaseUIComponent } from '../common/base-ui-component.js';
+import { themeManager } from '../common/theme-manager.js';
 import { logger } from '../logger.js';
 import { Replica } from '../models/replica.js';
 import { Speaker, SoundEffect } from '../models/role.js';
@@ -12,8 +14,9 @@ import { ToastComponent } from './toast-component.js';
 /**
  * Компоненты пользовательского интерфейса
  */
-class UIComponents {
+class UIComponents extends BaseUIComponent {
     constructor(dataManager, dataService) {
+        super();
         this.dataManager = dataManager;
         this.dataService = dataService;
         this.draggedElement = null;
@@ -27,6 +30,7 @@ class UIComponents {
      * Инициализация компонентов
      */
     initialize() {
+        super.initialize(); // Вызываем базовую инициализацию
         this.setupEventListeners();
         this.loadThemePreference(); // Загружаем сохраненную тему при инициализации
         this.updateRolesList();
@@ -80,46 +84,17 @@ class UIComponents {
      * Переключение темы
      */
     toggleTheme() {
-        const html = document.documentElement;
-        const currentTheme = html.getAttribute('data-theme') || 'light';
-        let newTheme;
-        
-        if (currentTheme === 'light') {
-            newTheme = 'dark';
-        } else if (currentTheme === 'dark') {
-            newTheme = 'light'; // Переключаемся на светлую тему
-        } else {
-            newTheme = 'dark'; // Если auto, переключаемся на темную тему
-        }
-        
-        this.applyTheme(newTheme);
-        localStorage.setItem('themePreference', newTheme); // Сохраняем предпочтение
-        this.updateThemeButtonIcon(newTheme); // Обновляем иконку кнопки
-        
-        logger.logUserAction('переключение темы', {
-            theme: newTheme
-        });
+        const newTheme = themeManager.toggleTheme(); // Используем общий менеджер
+        this.updateThemeButtonIcon('themeToggleBtn', newTheme); // Обновляем иконку кнопки
+        return newTheme;
     }
 
     /**
      * Обновление иконки кнопки темы
      * @param {string} theme - текущая тема
      */
-    updateThemeButtonIcon(theme) {
-        const themeBtn = document.getElementById('themeToggleBtn');
-        const themeIcon = themeBtn.querySelector('.theme-icon');
-        if (themeIcon) {
-            if (theme === 'dark') {
-                themeIcon.textContent = '☀️'; // Солнце для темной темы (показываем светлую иконку)
-                themeBtn.title = 'Светлая тема';
-            } else if (theme === 'light') {
-                themeIcon.textContent = '🌙'; // Луна для светлой темы (показываем темную иконку)
-                themeBtn.title = 'Темная тема';
-            } else { // auto
-                themeIcon.textContent = '🔄'; // Цикл для автоматической темы
-                themeBtn.title = 'Автоматическая тема';
-            }
-        }
+    updateThemeButtonIcon(buttonId, theme) {
+        super.updateThemeButtonIcon(buttonId, theme); // Вызываем базовый метод
     }
 
     /**
@@ -171,14 +146,7 @@ class UIComponents {
         });
 
         // Кнопка переключения темы
-        const themeToggleBtn = document.getElementById('themeToggleBtn');
-        if (themeToggleBtn) {
-            themeToggleBtn.addEventListener('click', () => {
-                this.toggleTheme();
-            });
-        } else {
-            logger.error('Элемент themeToggleBtn не найден в DOM');
-        }
+        this.setupThemeButton('themeToggleBtn', () => this.toggleTheme()); // Используем базовый метод с кастомным обработчиком
 
         // Обновление статистики при изменении данных
         this.dataManager.addUpdateCallback(() => {

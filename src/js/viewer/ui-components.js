@@ -1,3 +1,5 @@
+import { BaseUIComponent } from '../common/base-ui-component.js';
+import { themeManager } from '../common/theme-manager.js';
 import { logger } from '../logger.js';
 import { ModalComponent } from '../ui/modal-component.js';
 import { ToastComponent } from '../ui/toast-component.js';
@@ -8,19 +10,18 @@ import { featherIconsService } from '../utils/feather-icons.js';
 /**
  * Компоненты пользовательского интерфейса для режима просмотра
  */
-class ViewerUIComponents {
+class ViewerUIComponents extends BaseUIComponent {
     constructor(viewerApp) {
+        super();
         this.viewerApp = viewerApp;
         this.logger = logger;
-        this.elements = new Map(); // Используем Map для кэширования элементов
-        this.eventListeners = new Set(); // Используем Set для обработчиков событий
-        this.components = new Map(); // Храним созданные компоненты
     }
 
     /**
      * Инициализация UI компонентов
      */
     initialize() {
+        super.initialize(); // Вызываем базовую инициализацию
         logger.time('ui-components-initialization');
         this.createControls();
         this.setupEventListeners();
@@ -38,13 +39,12 @@ class ViewerUIComponents {
         const savedTheme = localStorage.getItem('viewerTheme');
         if (savedTheme) {
             this.viewerApp.setTheme(savedTheme);
-            this.updateThemeButtonIcon(savedTheme);
+            this.updateThemeButtonIcon('viewerThemeToggleBtn', savedTheme);
         } else {
-            // Если нет сохраненной темы, используем системную предпочтительную тему
-            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            const theme = systemPrefersDark ? 'dark' : 'light';
+            // Используем общую логику из themeManager
+            const theme = themeManager.loadThemePreference();
             this.viewerApp.setTheme(theme);
-            this.updateThemeButtonIcon(theme);
+            this.updateThemeButtonIcon('viewerThemeToggleBtn', theme);
         }
     }
 
@@ -198,27 +198,15 @@ class ViewerUIComponents {
      */
     updateTheme(theme) {
         document.documentElement.setAttribute('data-theme', theme);
-        this.updateThemeButtonIcon(theme);
+        this.updateThemeButtonIcon('viewerThemeToggleBtn', theme); // Используем базовый метод
     }
 
     /**
      * Обновление иконки кнопки темы
      * @param {string} theme - текущая тема
      */
-    updateThemeButtonIcon(theme) {
-        const themeBtn = domService.getElement('viewerThemeToggleBtn');
-        themeBtn.safeExecute(element => {
-            const themeIcon = element.querySelector('.theme-icon');
-            if (themeIcon) {
-                if (theme === 'dark') {
-                    themeIcon.textContent = '☀️'; // Солнце для темной темы (показываем светлую иконку)
-                    element.title = 'Светлая тема';
-                } else {
-                    themeIcon.textContent = '🌙'; // Луна для светлой темы (показываем темную иконку)
-                    element.title = 'Темная тема';
-                }
-            }
-        });
+    updateThemeButtonIcon(buttonId, theme) {
+        super.updateThemeButtonIcon(buttonId, theme); // Вызываем базовый метод
     }
 
     /**
@@ -289,20 +277,7 @@ class ViewerUIComponents {
         this.eventListeners.add(() => document.removeEventListener('keydown', keyboardHandler));
 
         // Кнопка переключения темы
-        const themeToggleBtn = domService.getElement('viewerThemeToggleBtn');
-        if (themeToggleBtn.exists()) {
-            const unsubscribe = eventService.subscribeToDOMEvent(
-                themeToggleBtn.getElement(),
-                'click',
-                () => {
-                    this.viewerApp.toggleTheme();
-                    this.updateThemeButtonIcon(this.viewerApp.getCurrentTheme());
-                }
-            );
-            this.eventListeners.add(unsubscribe);
-        } else {
-            this.logger.error('Элемент viewerThemeToggleBtn не найден в DOM');
-        }
+        this.setupThemeButton('viewerThemeToggleBtn', () => this.viewerApp.toggleTheme());
     }
 
     /**
